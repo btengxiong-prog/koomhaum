@@ -712,8 +712,8 @@
                                     </select>
                                 </div>
                                 <div class="field">
-                                    <label>ຈຳນວນເງິນເກັບທັງໝົດ (ສັງລວມ)</label>
-                                    <input id="pAmount" readonly style="background: #f8fafc; font-weight: bold; color: var(--teal);" placeholder="ຍອດລວມຈະສະແດງທີ່ນີ້">
+                                    <label>ຈຳນວນເງິນທີ່ຈ່າຍ (ກີບ)</label>
+                                    <input id="pAmount" type="text" oninput="formatInput(this)" style="font-weight: bold; color: var(--teal);" required>
                                 </div>
                                 <div class="field">
                                     <label>ວັນທີຈ່າຍ</label>
@@ -1398,14 +1398,9 @@
             
             if (deathId) {
                 let d = db.deaths.find(x => x.id === deathId);
-                // ສັງລວມຈຳນວນເງິນທີ່ເກັບໄດ້ຕົວຈິງແລ້ວ ສຳລັບກໍລະນີນີ້
-                let collected = db.payments
-                    .filter(p => p.deathId === deathId && p.status === 'confirmed')
-                    .reduce((s, p) => s + p.amount, 0);
-                amountInput.value = money(collected) + ' ກີບ (ຈາກເປົ້າໝາຍ ' + money(d ? d.total : 0) + ' ກີບ)';
+                amountInput.value = money(d ? d.rate : 50000); // ດຶງອັດຕາເກັບເງິນຕໍ່ຄອບຄົວມາສະແດງ
             } else {
-                let t = totals();
-                amountInput.value = money(t.paid) + ' ກີບ';
+                amountInput.value = "50,000"; // ຄ່າເລີ່ມຕົ້ນຖ້າບໍ່ລະບຸກໍລະນີ
             }
         }
 
@@ -1539,8 +1534,8 @@
             e.preventDefault();
             let memberVal = document.getElementById('pMember').value;
             let deathId = document.getElementById('pDeath').value;
-            let d = db.deaths.find(x => x.id === deathId);
-            let payAmount = d ? d.rate : 50000; // ໃຊ້ຈຳນວນເງິນຕາມອັດຕາເກັບຕໍ່ຄອບຄົວຂອງກໍລະນີ
+            let amountStr = document.getElementById('pAmount').value;
+            let payAmount = Number(amountStr.replace(/,/g, '')) || 0; // ອ່ານຈຳນວນເງິນຕົວຈິງທີ່ປ້ອນໃນປ່ອງ
             
             db.payments.unshift({
                 id: 'P' + Date.now(),
