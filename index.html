@@ -1092,8 +1092,14 @@
             
             let topSaveBtn = document.getElementById('topSaveDeathBtn');
             if (topSaveBtn) {
-                if (page === 'deaths') topSaveBtn.classList.remove('hidden');
-                else topSaveBtn.classList.add('hidden');
+                if (page === 'deaths') {
+                    topSaveBtn.classList.remove('hidden');
+                    // ດຶງຈຳນວນສະມາຊິກຫຼ້າສຸດມາໃສ່ອັດຕະໂນມັດ
+                    document.getElementById('dCount').value = db.members.length;
+                    calcDeath();
+                } else {
+                    topSaveBtn.classList.add('hidden');
+                }
             }
 
             let topMemberActions = document.getElementById('topMemberActions');
