@@ -1717,8 +1717,10 @@
             renderDashboard();
             renderReports();
             
-            // ເອີ້ນຟັງຊັນນີ້ເພື່ອໃຫ້ປ່ອງເງິນອັບເດດຕົວເລກຂຶ້ນມາທັນທີ (Realtime) ໂດຍບໍ່ຕ້ອງລໍຖ້າກົດປ່ຽນ
-            updatePaymentRate(); 
+            // ອັບເດດປ່ອງຈຳນວນເງິນໃນໜ້າຮັບເງິນໃຫ້ສະແດງທັນທີ
+            if (typeof updatePaymentRate === 'function') {
+                updatePaymentRate();
+            }
         }
 
         function csv(rows, name) {
