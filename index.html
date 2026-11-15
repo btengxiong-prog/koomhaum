@@ -1049,7 +1049,7 @@
                 isInitialized = true;
                 
                 supabaseClient.channel('welfare-sync')
-                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'welfare_data' }, (payload) => {
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'welfare_data' }, (payload) => {
                         if (payload.new && payload.new.data) {
                             db = payload.new.data;
                             localStorage.setItem(KEY, JSON.stringify(db));
@@ -1716,6 +1716,9 @@
             renderEntries();
             renderDashboard();
             renderReports();
+            
+            // ເອີ້ນຟັງຊັນນີ້ເພື່ອໃຫ້ປ່ອງເງິນອັບເດດຕົວເລກຂຶ້ນມາທັນທີ (Realtime) ໂດຍບໍ່ຕ້ອງລໍຖ້າກົດປ່ຽນ
+            updatePaymentRate(); 
         }
 
         function csv(rows, name) {
