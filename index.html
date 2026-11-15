@@ -1139,7 +1139,7 @@
                         amountHtml = `<span style="color:var(--teal); font-weight:bold;">${money(displayAmount)}</span>`;
                         checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" checked disabled title="ຈ່າຍແລ້ວ" style="width:16px;height:16px;cursor:not-allowed;">`;
                     } else {
-                        amountHtml = `<span id="amt-${m.id}" style="font-weight:bold;">0</span>`;
+                        amountHtml = `<span id="amt-${m.id}" style="color:var(--muted); font-weight:bold;">${money(currentRate)}</span>`;
                         checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" onchange="toggleAmount('${m.id}', ${currentRate}, this.checked)" style="width:16px;height:16px;cursor:pointer;">`;
                     }
                 } else {
@@ -1304,16 +1304,13 @@
         function toggleAllMembers(source) {
             let checkboxes = document.querySelectorAll('.chk-member:not([disabled])');
             let selectedDeathId = document.getElementById('memberDeathSelect')?.value;
-            let selectedDeath = db.deaths.find(x => x.id === selectedDeathId);
-            let currentRate = selectedDeath ? selectedDeath.rate : 0;
             
             checkboxes.forEach(cb => {
                 cb.checked = source.checked;
                 if (selectedDeathId) {
                     let el = document.getElementById('amt-' + cb.value);
                     if (el) {
-                        el.textContent = source.checked ? money(currentRate) : '0';
-                        el.style.color = source.checked ? 'var(--teal)' : 'inherit';
+                        el.style.color = source.checked ? 'var(--teal)' : 'var(--muted)';
                     }
                 }
             });
@@ -1323,19 +1320,19 @@
         function toggleAmount(memberId, rate, isChecked) {
             let el = document.getElementById('amt-' + memberId);
             if (el) {
-                el.textContent = isChecked ? money(rate) : '0';
-                el.style.color = isChecked ? 'var(--teal)' : 'inherit';
+                el.style.color = isChecked ? 'var(--teal)' : 'var(--muted)';
                 calculateTableTotal(); // ຄຳນວນຍອດລວມຫຼັງຈາກຕິກແຕ່ລະອັນ
             }
         }
 
-        // ຟັງຊັນໃໝ່: ຄຳນວນຍອດລວມໃນຕາຕະລາງ
+        // ຟັງຊັນໃໝ່: ຄຳນວນຍອດລວມໃນຕາຕະລາງ (ສະເພາະຜູ້ທີ່ຈ່າຍແລ້ວ ຫຼື ຖືກຕິກເລືອກ)
         function calculateTableTotal() {
             let total = 0;
             let rows = document.getElementById('memberRows').getElementsByTagName('tr');
             for(let i = 0; i < rows.length; i++) {
                 let cell = rows[i].getElementsByTagName('td')[7]; // ຄໍລຳທີ 8 (index 7) ຄືຈຳນວນເງິນ
-                if(cell) {
+                let cb = rows[i].querySelector('.chk-member');
+                if(cell && cb && cb.checked) {
                     let text = cell.textContent || cell.innerText;
                     let val = Number(text.replace(/,/g, '').replace(/-/g, '')) || 0;
                     total += val;
