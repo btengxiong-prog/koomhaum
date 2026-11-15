@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>ລະບົບຄວບຄຸມກອງທຶນສະຫວັດດີການ</title>
-    <title>ລະບົບຄວບຄຸມກອງທຶນສະຫວັດດີການ</title>
     <!-- ເພີ່ມ SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- ເພີ່ມ Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-    <style>
-
         :root {
             --navy: #142b4a;
             --blue: #2563eb;
@@ -504,7 +501,7 @@
                 <button data-page="backup"><span class="ico">💾</span> ສຳຮອງຂໍ້ມູນ</button>
             </nav>
             
-            <div class="sidefoot">ລະບົບຈັດການກອງທຶນ<br>Version 1.0 · Offline</div>
+            <div class="sidefoot">ລະບົບຈັດການກອງທຶນ<br>Version 1.0 · Online Sync</div>
         </aside>
 
         <main class="main">
@@ -876,7 +873,7 @@
                         <button class="btn light" style="margin-top:12px" onclick="restore()">ນຳເຂົ້າຄືນ</button>
                         
                         <div class="notice" style="margin-top:20px">
-                            ໝາຍເຫດ: ລຸ້ນນີ້ໃຊ້ Local Storage ໃນ Browser ເຄື່ອງດຽວ. ຖ້າລົບຂໍ້ມູນ Browser ຫຼື ປ່ຽນເຄື່ອງ ຕ້ອງກູ້ຄືນຈາກ Backup. ຍັງບໍ່ໄດ້ເຊື່ອມ Firebase/ລະບົບ Login ອອນລາຍ.
+                            ໝາຍເຫດ: ລະບົບມີການຊິງຄ໌ຂໍ້ມູນຜ່ານ Supabase Cloud ອັດຕະໂນມັດ, ການສຳຮອງນີ້ໄວ້ສຳລັບ Backup ໃນກໍລະນີສຸກເສີນ.
                         </div>
                     </div>
                 </section>
@@ -1018,8 +1015,8 @@
         ];
 
         // --- ຕັ້ງຄ່າ SUPABASE ຕົວຈິງຢູ່ບ່ອນນີ້ ---
-        const supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co'; // ປ່ຽນເປັນ URL ຂອງທ່ານ
-        const supabaseKey = 'YOUR_ANON_KEY'; // ປ່ຽນເປັນ Key ຂອງທ່ານ
+        const supabaseUrl = 'https://knfkvatpxsyyyoeuigmm.supabase.co'; 
+        const supabaseKey = 'sb_publishable_WPA5uJruEA9NfDO-1KnY0w_rm7-yYHH'; 
         
         const KEY = 'welfareFund_v1';
         let db = JSON.parse(localStorage.getItem(KEY) || 'null') || { members: initialMembers, deaths: [], payments: [], entries: [] };
