@@ -1017,43 +1017,61 @@
             {"id": "WF0033", "name": "Tuam lis", "phone": "", "village": "ນ້ຳປຸຍ", "district": "ພຽງ", "province": "ໄຊຍະບູລີ", "active": true}
         ];
 
-        // ຕັ້ງຄ່າ Supabase (ເອົາ URL ແລະ Key ທີ່ກັອບປີ້ມາ ວາງໃສ່ໃນເຄື່ອງໝາຍຈຸດຄູ່ '')
-        const supabaseUrl = 'ວາງ_URL_ທີ່ກັອບປີ້ມາ_ໃສ່ບ່ອນນີ້';
-        const supabaseKey = 'ວາງ_ANON_KEY_ທີ່ກັອບປີ້ມາ_ໃສ່ບ່ອນນີ້';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-        let db = { members: initialMembers, deaths: [], payments: [], entries: [] };
+        // --- ຕັ້ງຄ່າ SUPABASE ຕົວຈິງຢູ່ບ່ອນນີ້ ---
+        const supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co'; // ປ່ຽນເປັນ URL ຂອງທ່ານ
+        const supabaseKey = 'YOUR_ANON_KEY'; // ປ່ຽນເປັນ Key ຂອງທ່ານ
+        
+        const KEY = 'welfareFund_v1';
+        let db = JSON.parse(localStorage.getItem(KEY) || 'null') || { members: initialMembers, deaths: [], payments: [], entries: [] };
         let isInitialized = false;
+        let supabaseClient = null;
 
-        // ຟັງຊັນໂຫຼດຂໍ້ມູນຈາກ Cloud (Supabase)
-        async function loadCloudData() {
-            const { data, error } = await supabaseClient.from('welfare_data').select('data').eq('id', 1).single();
-            if (data && data.data && data.data.members) {
-                db = data.data;
-            } else {
-                await supabaseClient.from('welfare_data').upsert({ id: 1, data: db });
+        // ກວດສອບກ່ອນວ່າ URL ຖືກຕ້ອງ ຫຼື ບໍ່ ເພື່ອບໍ່ໃຫ້ລະບົບ Error
+        try {
+            if (supabaseUrl.startsWith('http')) {
+                supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
             }
-            isInitialized = true;
+        } catch (e) {
+            console.error("Supabase ບໍ່ຖືກຕ້ອງ", e);
+        }
+
+        async function loadCloudData() {
+            if (!supabaseClient) {
+                console.warn("ໃຊ້ຖານຂໍ້ມູນໃນເຄື່ອງ (Local) ເນື່ອງຈາກຍັງບໍ່ໄດ້ເຊື່ອມ Supabase");
+                renderAll();
+                return;
+            }
+            try {
+                const { data, error } = await supabaseClient.from('welfare_data').select('data').eq('id', 1).single();
+                if (data && data.data && data.data.members) {
+                    db = data.data;
+                    localStorage.setItem(KEY, JSON.stringify(db));
+                } else {
+                    await supabaseClient.from('welfare_data').upsert({ id: 1, data: db });
+                }
+                isInitialized = true;
+                
+                supabaseClient.channel('welfare-sync')
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'welfare_data' }, (payload) => {
+                        if (payload.new && payload.new.data) {
+                            db = payload.new.data;
+                            localStorage.setItem(KEY, JSON.stringify(db));
+                            renderAll();
+                        }
+                    }).subscribe();
+            } catch (e) {
+                console.error("ການດຶງຂໍ້ມູນ Cloud ມີບັນຫາ", e);
+            }
             renderAll();
         }
 
-        // ຟັງຊັນບັນທຶກອັດຕະໂນມັດໄປຍັງ Cloud
         const save = async () => {
+            localStorage.setItem(KEY, JSON.stringify(db)); // ບັນທຶກລົງເຄື່ອງໄວ້ກັນໜຽວກ່ອນສະເໝີ
             renderAll(); 
-            if (isInitialized) {
+            if (isInitialized && supabaseClient) {
                 await supabaseClient.from('welfare_data').upsert({ id: 1, data: db });
             }
         };
-
-        // ຟັງຊັນຮັບຂໍ້ມູນ Realtime
-        supabaseClient.channel('welfare-sync')
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'welfare_data' }, (payload) => {
-                if (payload.new && payload.new.data) {
-                    db = payload.new.data;
-                    renderAll();
-                }
-            })
-            .subscribe();
 
         const money = n => Number(n || 0).toLocaleString('en-US');
         const today = () => new Date().toISOString().slice(0, 10);
