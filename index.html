@@ -129,6 +129,9 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 30px;
+            position: sticky; /* ເຮັດໃຫ້ແຖບເທິງຢຶດຕິດ */
+            top: 0; /* ຢຶດຕິດຢູ່ຈຸດເທິງສຸດ */
+            z-index: 100; /* ໃຫ້ຢູ່ຊັ້ນເທິງສຸດເພື່ອບໍ່ໃຫ້ຂໍ້ມູນອື່ນເລື່ອນມາທັບ */
         }
 
         .top h2 {
@@ -309,6 +312,7 @@
 
         .tablewrap {
             overflow: auto;
+            max-height: 70vh; /* ກຳນົດຄວາມສູງສູງສຸດໃຫ້ຕາຕະລາງ ເພື່ອສ້າງແຖບເລື່ອນພາຍໃນກ່ອງ */
             border: 1px solid var(--line);
             border-radius: 10px;
         }
@@ -325,6 +329,10 @@
             color: #536278;
             text-align: left;
             font-weight: 600;
+            position: sticky; /* ເຮັດໃຫ້ຫົວຕາຕະລາງຢຶດຕິດ */
+            top: 0; /* ຢຶດຕິດຢູ່ເທິງສຸດຂອງກ່ອງຕາຕະລາງ */
+            z-index: 10;
+            box-shadow: 0 1px 0 #edf0f5; /* ເພີ່ມເສັ້ນຂັ້ນບາງໆເພື່ອໃຫ້ເບິ່ງງາມເວລາເລື່ອນຂໍ້ມູນລົງມາ */
         }
 
         th,
@@ -535,6 +543,11 @@
                         </button>
                     </div>
 
+                    <!-- ປຸ່ມລຶບລາຍການໜ້າຮັບເງິນ (ຈະສະແດງສະເພາະຕອນຢູ່ໜ້າຮັບເງິນ) -->
+                    <button id="topDeletePaymentsBtn" type="button" class="hidden" onclick="delSelectedPayments()" style="font-family: inherit; background: #dc4b55; color: white; border: none; border-radius: 8px; padding: 9px 15px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 3px 6px rgba(220,75,85,0.2); transition: 0.2s;">
+                        🗑️ ລຶບລາຍການທີ່ເລືອກ
+                    </button>
+
                     <div class="user">● ຜູ້ດູແລລະບົບ</div>
                 </div>
             </header>
@@ -692,63 +705,7 @@
 
                 <!-- Payments Page -->
                 <section id="payments" class="page hidden">
-                    <div class="pagehead">
-                        <div>
-                            <h1>ເງິນສະຫຼະຊ່ວຍ</h1>
-                            <p>ບັນທຶກເງິນທີ່ຮັບຈາກແຕ່ລະຄອບຄົວ</p>
-                        </div>
-                    </div>
                     <div class="panel">
-                        <form id="paymentForm">
-                            <div class="formgrid">
-                                <div class="field">
-                                    <label>ຄອບຄົວຜູ້ຈ່າຍ</label>
-                                    <input id="pMember" list="memberList" placeholder="ພິມຄົ້ນຫາຊື່ ຫຼື ລະຫັດສະມາຊິກ..." required autocomplete="off">
-                                </div>
-                                <div class="field">
-                                    <label>ອ້າງອີງກໍລະນີ</label>
-                                    <select id="pDeath" onchange="updatePaymentRate()">
-                                        <option value="">ບໍ່ລະບຸ / ອື່ນໆ</option>
-                                    </select>
-                                </div>
-                                <div class="field">
-                                    <label>ຈຳນວນເງິນທີ່ຈ່າຍ (ກີບ)</label>
-                                    <input id="pAmount" type="text" oninput="formatInput(this)" style="font-weight: bold; color: var(--teal);" required>
-                                </div>
-                                <div class="field">
-                                    <label>ວັນທີຈ່າຍ</label>
-                                    <input id="pDate" type="date" required>
-                                </div>
-                                <div class="field">
-                                    <label>ວິທີຈ່າຍ</label>
-                                    <select id="pMethod">
-                                        <option>ເງິນສົດ</option>
-                                        <option>ໂອນທະນາຄານ</option>
-                                        <option>ອື່ນໆ</option>
-                                    </select>
-                                </div>
-                                <div class="field">
-                                    <label>ສະຖານະ</label>
-                                    <select id="pStatus">
-                                        <option value="confirmed">ຢືນຢັນແລ້ວ</option>
-                                        <option value="pending">ລໍຖ້າກວດສອບ</option>
-                                    </select>
-                                </div>
-                                <div class="field wide">
-                                    <label>ໝາຍເຫດ / ເລກອ້າງອີງ</label>
-                                    <input id="pNote">
-                                </div>
-                            </div>
-                            <button class="btn green" type="submit">＋ ບັນທຶກການຮັບເງິນ</button>
-                        </form>
-                    </div>
-                    <div class="panel" style="margin-top:16px">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3 style="margin: 0;">ປະຫວັດການຮັບເງິນ</h3>
-                            <button type="button" onclick="delSelectedPayments()" style="background: #dc4b55; color: white; border: none; border-radius: 8px; padding: 8px 15px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 3px 6px rgba(220,75,85,0.2); transition: 0.2s;">
-                                🗑️ ລຶບລາຍການທີ່ເລືອກ
-                            </button>
-                        </div>
                         <div class="tablewrap">
                             <table>
                                 <thead>
@@ -1150,6 +1107,16 @@
                 }
             }
             
+            // ຄວບຄຸມການສະແດງຜົນປຸ່ມ "ລຶບລາຍການທີ່ເລືອກ" ໃນໜ້າຮັບເງິນ
+            let topDelPayBtn = document.getElementById('topDeletePaymentsBtn');
+            if (topDelPayBtn) {
+                if (page === 'payments') {
+                    topDelPayBtn.classList.remove('hidden');
+                } else {
+                    topDelPayBtn.classList.add('hidden');
+                }
+            }
+            
             renderAll();
         }
 
@@ -1433,56 +1400,6 @@
             document.getElementById('dTotal').value = money(rate * Math.max(0, count)) + ' ກີບ';
         }
 
-        function updatePaymentRate() {
-            let deathId = document.getElementById('pDeath').value;
-            let amountInput = document.getElementById('pAmount');
-            
-            if (deathId) {
-                let d = db.deaths.find(x => x.id === deathId);
-                amountInput.value = money(d ? d.rate : 50000); // ດຶງອັດຕາເກັບເງິນຕໍ່ຄອບຄົວມາສະແດງ
-            } else {
-                amountInput.value = "50,000"; // ຄ່າເລີ່ມຕົ້ນຖ້າບໍ່ລະບຸກໍລະນີ
-            }
-        }
-
-        document.getElementById('deathForm').onsubmit = e => {
-            e.preventDefault();
-            
-            // ດຶງຂໍ້ມູນຈາກຟອມ ແລະ ຕັດຈຸດອອກກ່ອນຄຳນວນ
-            let rateInput = document.getElementById('dRate').value;
-            let rate = Number(rateInput.replace(/,/g, '')) || 0;
-            let memberVal = document.getElementById('dMember').value;
-            let count = Number(document.getElementById('dCount').value) || 0;
-            
-            // ເພີ່ມຂໍ້ມູນໃໝ່ລົງໃນ Array (ເຊິ່ງຈະໄປສະແດງຢູ່ ກ່ອງສີແດງ 3)
-            db.deaths.unshift({
-                id: 'D' + Date.now(),
-                name: document.getElementById('dName').value.trim(),
-                memberId: memberVal.includes(' - ') ? memberVal.split(' - ')[0] : memberVal,
-                date: document.getElementById('dDate').value,
-                count: count,
-                rate: rate,
-                total: rate * count,
-                note: document.getElementById('dNote').value
-            });
-            
-            // ບັນທຶກ ແລະ ອັບເດດໜ້າຈໍທັງໝົດ
-            save(); 
-            e.target.reset();
-            
-            // ຕັ້ງຄ່າເລີ່ມຕົ້ນຄືນໃໝ່ສຳລັບການບັນທຶກຄັ້ງຕໍ່ໄປ
-            document.getElementById('dDate').value = today();
-            document.getElementById('dCount').value = db.members.length;
-            calcDeath();
-            
-            // ແຈ້ງເຕືອນວ່າບັນທຶກສຳເລັດດ້ວຍ SweetAlert2
-            if (typeof Swal !== 'undefined') {
-                Swal.fire('ສຳເລັດ!', 'ບັນທຶກກໍລະນີເສຍຊີວິດຮຽບຮ້ອຍແລ້ວ', 'success');
-            } else {
-                alert('ບັນທຶກກໍລະນີເສຍຊີວິດຮຽບຮ້ອຍແລ້ວ');
-            }
-        };
-
         function renderDeaths() {
             document.getElementById('deathRows').innerHTML = db.deaths.map(d => `
                 <tr>
@@ -1558,17 +1475,35 @@
         
         function quickPay(memberId, deathId) {
             closeTracking();
-            go('payments'); // ພາໄປໜ້າຮັບເງິນອັດຕະໂນມັດ
-            
             let m = member(memberId);
             let d = db.deaths.find(x => x.id === deathId);
+            let rate = d ? d.rate : 50000;
             
-            // ປ້ອນຂໍ້ມູນໃສ່ຟອມໜ້າຮັບເງິນໃຫ້ອັດຕະໂນມັດ
-            document.getElementById('pMember').value = memberId + ' - ' + (m ? m.name : '');
-            document.getElementById('pDeath').value = deathId;
-            document.getElementById('pAmount').value = money(d ? d.rate : 50000);
-            
-            alert('ລະບົບໄດ້ດຶງຂໍ້ມູນມາໜ້າຮັບເງິນແລ້ວ! ກະລຸນາກວດສອບ ແລ້ວກົດ "ບັນທຶກ" ໄດ້ເລີຍ');
+            Swal.fire({
+                title: 'ຢືນຢັນຮັບເງິນ?',
+                text: `ຮັບເງິນຈຳນວນ ${money(rate)} ກີບ ຈາກຄອບຄົວ ${m ? m.name : ''} ບໍ?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0f9d8a',
+                cancelButtonColor: '#718096',
+                confirmButtonText: 'ຢືນຢັນ',
+                cancelButtonText: 'ຍົກເລີກ'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    db.payments.unshift({
+                        id: 'P' + Date.now(),
+                        memberId: memberId,
+                        deathId: deathId,
+                        amount: rate,
+                        date: today(),
+                        method: 'ເງິນສົດ',
+                        status: 'confirmed',
+                        note: 'ຮັບເງິນດ່ວນ'
+                    });
+                    save();
+                    Swal.fire('ສຳເລັດ!', 'ບັນທຶກຮັບເງິນສຳເລັດແລ້ວ', 'success');
+                }
+            });
         }
         
         document.getElementById('paymentForm').onsubmit = e => {
@@ -1768,14 +1703,6 @@
 
         function renderAll() {
             renderDatalist();
-            
-            let pDeathEl = document.getElementById('pDeath');
-            let de = pDeathEl.value;
-            // ໃຊ້ (db.deaths || []) ເພື່ອປ້ອງກັນ Error ເວລາ Array ເປົ່າຫວ່າງ
-            pDeathEl.innerHTML = '<option value="">ບໍ່ລະບຸ / ອື່ນໆ</option>' + (db.deaths || []).map(d => 
-                `<option value="${d.id}">${esc(d.date ? d.date.split('-').reverse().join('/') : '')} - ${esc(d.name)}</option>`
-            ).join('');
-            pDeathEl.value = de;
 
             let mDeathEl = document.getElementById('memberDeathSelect');
             if(mDeathEl) {
@@ -1793,11 +1720,6 @@
             renderEntries();
             renderDashboard();
             renderReports();
-            
-            // ອັບເດດປ່ອງຈຳນວນເງິນໃນໜ້າຮັບເງິນໃຫ້ສະແດງທັນທີ
-            if (typeof updatePaymentRate === 'function') {
-                updatePaymentRate();
-            }
         }
 
         function csv(rows, name) {
