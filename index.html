@@ -531,7 +531,7 @@
                 <button data-page="members"><span class="ico">👥</span> ຈັດການສະມາຊິກ</button>
                 <button data-page="deaths"><span class="ico">📋</span> ບັນທຶກກໍລະນີເສຍຊີວິດ</button>
                 <button data-page="payments"><span class="ico">📊</span> ສັງລວມຈ່າຍເງິນ</button>
-                <button data-page="expenses"><span class="ico">🧾</span> ລາຍຮັບ-ລາຍຈ່າຍ</button>
+                <button data-page="expenses"><span class="ico">💸</span> ການມອບເງິນຊ່ວຍເຫຼືອ</button>
                 <button data-page="reports"><span class="ico">📊</span> ລາຍງານ</button>
                 <button data-page="backup"><span class="ico">💾</span> ສຳຮອງຂໍ້ມູນ</button>
             </nav>
@@ -774,54 +774,36 @@
                     </div>
                 </section>
 
-                <!-- Expenses Page -->
+                <!-- Expenses / Payout Summary Page -->
                 <section id="expenses" class="page hidden">
                     <div class="pagehead">
                         <div>
-                            <h1>ລາຍຮັບ-ລາຍຈ່າຍ</h1>
-                            <p>ບັນທຶກລາຍຈ່າຍຂອງກອງທຶນ</p>
+                            <h1>ສັງລວມການມອບເງິນຊ່ວຍເຫຼືອ</h1>
+                            <p>ສະຫຼຸບຍອດເງິນທີ່ເກັບໄດ້ຕົວຈິງຈາກສະມາຊິກ ເພື່ອນຳມອບໃຫ້ຄອບຄົວຜູ້ເສຍຊີວິດ</p>
                         </div>
                     </div>
-                    <div class="panel" id="expenseFormPanel">
-                        <form id="expenseForm">
-                            <div class="formgrid">
-                                <div class="field">
-                                    <label>ປະເພດລາຍການ</label>
-                                    <select id="eType">
-                                        <option value="expense">ລາຍຈ່າຍ</option>
-                                        <option value="income">ລາຍຮັບອື່ນ</option>
-                                    </select>
-                                </div>
-                                <div class="field">
-                                    <label>ວັນທີ</label>
-                                    <input id="eDate" type="date" required>
-                                </div>
-                                <div class="field">
-                                    <label>ລາຍລະອຽດ</label>
-                                    <input id="eDesc" required>
-                                </div>
-                                <div class="field">
-                                    <label>ຈຳນວນເງິນ (ກີບ)</label>
-                                    <input id="eAmount" type="number" min="1" required>
-                                </div>
-                            </div>
-                            <button class="btn" type="submit">ບັນທຶກລາຍການ</button>
-                        </form>
-                    </div>
-                    <div class="panel" style="margin-top:16px">
-                        <h3>ລາຍການທັງໝົດ</h3>
+                    <div class="panel">
                         <div class="tablewrap">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>ວັນທີ</th>
-                                        <th>ປະເພດ</th>
-                                        <th>ລາຍລະອຽດ</th>
-                                        <th>ຈຳນວນເງິນ</th>
-                                        <th></th>
+                                        <th style="width: 50px;">ລ/ດ</th>
+                                        <th>ວັນທີເສຍຊີວິດ</th>
+                                        <th>ຊື່ຜູ້ເສຍຊີວິດ</th>
+                                        <th>ຄອບຄົວຜູ້ຮັບ</th>
+                                        <th style="text-align: right;">ຍອດເກັບໄດ້ຈິງ (ກີບ)</th>
+                                        <th style="text-align: center;">ສະຖານະການມອບ</th>
+                                        <th style="text-align: center;">ຈັດການ</th>
                                     </tr>
                                 </thead>
-                                <tbody id="expenseRows"></tbody>
+                                <tbody id="payoutRows"></tbody>
+                                <tfoot>
+                                    <tr style="background-color: #f8fafc; font-size: 14px;">
+                                        <td colspan="4" style="text-align: right; padding-right: 20px;"><b>ລວມຍອດເງິນມອບທັງໝົດ:</b></td>
+                                        <td style="text-align: right; color: var(--teal); font-weight: 800;"><span id="totalPayoutAmount">0</span></td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -1720,37 +1702,168 @@
             });
         }
 
-        document.getElementById('expenseForm').onsubmit = e => {
-            e.preventDefault();
-            db.entries.unshift({
-                id: 'E' + Date.now(),
-                type: document.getElementById('eType').value,
-                date: document.getElementById('eDate').value,
-                desc: document.getElementById('eDesc').value.trim(),
-                amount: Number(document.getElementById('eAmount').value)
-            });
-            
-            save();
-            e.target.reset();
-            document.getElementById('eDate').value = today();
-        };
+        function renderPayouts() {
+            let count = 1;
+            let grandTotalCollected = 0;
+            let isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-        function renderEntries() {
-            document.getElementById('expenseRows').innerHTML = db.entries.map(x => `
-                <tr>
-                    <td>${esc(x.date)}</td>
-                    <td>
-                        <span class="tag ${x.type === 'expense' ? 'bad' : ''}">
-                            ${x.type === 'expense' ? 'ລາຍຈ່າຍ' : 'ລາຍຮັບ'}
-                        </span>
-                    </td>
-                    <td>${esc(x.desc)}</td>
-                    <td>${money(x.amount)}</td>
-                    <td>
-                        <button class="mini del" onclick="delItem('entries','${x.id}')">ລົບ</button>
+            let html = db.deaths.map((d) => {
+                let collectedAmount = db.payments
+                    .filter(p => p.deathId === d.id && p.status === 'confirmed')
+                    .reduce((sum, p) => sum + p.amount, 0);
+                
+                grandTotalCollected += collectedAmount;
+
+                // ₭ ຜົນລວມເງິນທີ່ມອບໄປແລ້ວທຸກງວດ
+                d.payouts = d.payouts || [];
+                let totalPaidOut = d.payouts.reduce((sum, po) => sum + po.amount, 0);
+                let remaining = collectedAmount - totalPaidOut;
+
+                let statusBadge = '';
+                if (totalPaidOut >= collectedAmount && collectedAmount > 0) {
+                    statusBadge = `<span class="tag">🟢 ມອບຄົບແລ້ວ (${money(totalPaidOut)})</span>`;
+                } else if (totalPaidOut > 0) {
+                    statusBadge = `<span class="tag pending" style="background:#fef3c7; color:#b45309;">🟡 ມອບແລ້ວ ${money(totalPaidOut)} (ຄ້າງ ${money(remaining)})</span>`;
+                } else {
+                    statusBadge = `<span class="tag bad">🔴 ຍັງບໍ່ທັນມອບ</span>`;
+                }
+
+                let actionBtn = isAdmin ? `
+                    <button class="mini" style="background: #2563eb; color: white; font-weight: bold; padding: 6px 12px; border-radius: 6px;" onclick="openPayoutModal('${d.id}')">
+                        📋 ຈັດການການມອບເງິນ
+                    </button>
+                ` : '<span class="muted">-</span>';
+
+                return `
+                    <tr>
+                        <td>${count++}</td>
+                        <td>${esc(d.date ? d.date.split('-').reverse().join('/') : '')}</td>
+                        <td><b>${esc(d.name)}</b></td>
+                        <td>${esc(member(d.memberId)?.name || '—')}</td>
+                        <td style="text-align: right; color: var(--teal); font-weight: bold;">${money(collectedAmount)}</td>
+                        <td style="text-align: center;">${statusBadge}</td>
+                        <td style="text-align: center;">${actionBtn}</td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="7" class="empty">ຍັງບໍ່ມີກໍລະນີເສຍຊີວິດ</td></tr>';
+
+            document.getElementById('payoutRows').innerHTML = html;
+            let totalEl = document.getElementById('totalPayoutAmount');
+            if (totalEl) totalEl.textContent = money(grandTotalCollected);
+        }
+
+        function openPayoutModal(deathId) {
+            let d = db.deaths.find(x => x.id === deathId);
+            if (!d) return;
+
+            d.payouts = d.payouts || [];
+            let collectedAmount = db.payments
+                .filter(p => p.deathId === d.id && p.status === 'confirmed')
+                .reduce((sum, p) => sum + p.amount, 0);
+
+            let totalPaidOut = d.payouts.reduce((sum, po) => sum + po.amount, 0);
+            let remaining = collectedAmount - totalPaidOut;
+
+            let payoutsHtml = d.payouts.length > 0 ? d.payouts.map((po, idx) => `
+                <tr style="font-size: 12px;">
+                    <td>ງວດທີ ${idx + 1} (${po.date})</td>
+                    <td style="font-weight: bold; color: var(--teal);">${money(po.amount)} ກີບ</td>
+                    <td>${esc(po.note || '-')}</td>
+                    <td style="text-align: center;">
+                        <button class="mini del" onclick="deletePayoutRecord('${d.id}', '${po.id}')">ລົບ</button>
                     </td>
                 </tr>
-            `).join('') || '<tr><td colspan="5" class="empty">ຍັງບໍ່ມີລາຍການ</td></tr>';
+            `).join('') : '<tr><td colspan="4" class="empty" style="padding:10px;">ຍັງບໍ່ມີປະຫວັດການມອບ</td></tr>';
+
+            Swal.fire({
+                title: `ຈັດການມອບເງິນ: ${d.name}`,
+                html: `
+                    <div style="text-align: left; font-size: 13px; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--line);">
+                        <p style="margin: 0 0 5px 0;">💰 ຍອດເກັບໄດ້ທັງໝົດ: <b>${money(collectedAmount)} ກีບ</b></p>
+                        <p style="margin: 0 0 5px 0; color: #0f9d8a;">✅ ມອບໄປແລ້ວ: <b>${money(totalPaidOut)} ກີບ</b></p>
+                        <p style="margin: 0; color: #dc4b55;">🔴 ຍັງຄ້າງມອບ: <b>${money(remaining)} ກີບ</b></p>
+                    </div>
+
+                    <div style="max-height: 150px; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; margin-bottom: 15px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f1f5f9; position: sticky; top: 0;">
+                                <tr style="font-size: 11px; text-align: left;">
+                                    <th style="padding: 6px;">ງວດ/ວັນທີ</th>
+                                    <th style="padding: 6px;">ຈຳນວນເງິນ</th>
+                                    <th style="padding: 6px;">ໝາຍເຫດ</th>
+                                    <th style="padding: 6px; text-align: center;">ລົບ</th>
+                                </tr>
+                            </thead>
+                            <tbody>${payoutsHtml}</tbody>
+                        </table>
+                    </div>
+
+                    <div style="text-align: left; background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                        <b style="font-size: 13px; color: #166534; display: block; margin-bottom: 8px;">＋ ບັນທຶກມອບເງິນງວດໃໝ່</b>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <input id="swalAmount" type="text" placeholder="ຈຳນວນເງິນ (ກີບ)" value="${remaining > 0 ? money(remaining) : ''}" oninput="formatInput(this)" style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+                            <input id="swalDate" type="date" value="${today()}" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+                        </div>
+                        <input id="swalNote" type="text" placeholder="ໝາຍເຫດ (ເຊັ່ນ: ມອບງວດທີ 1 ໃຫ້ນ້ອງສາວ)" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '💾 ບັນທຶກເພີ່ມງວດນີ້',
+                cancelButtonText: 'ປິດໜ້າ່າງ',
+                confirmButtonColor: '#0f9d8a',
+                width: '550px',
+                preConfirm: () => {
+                    let amtStr = document.getElementById('swalAmount').value.replace(/,/g, '');
+                    let amount = Number(amtStr) || 0;
+                    let date = document.getElementById('swalDate').value;
+                    let note = document.getElementById('swalNote').value.trim();
+
+                    if (amount <= 0) {
+                        Swal.showValidationMessage('ກະລຸນາປ້ອນຈຳນວນເງິນໃຫ້ถูกต้อง');
+                        return false;
+                    }
+                    return { amount, date, note };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let data = result.value;
+                    d.payouts.push({
+                        id: 'PO' + Date.now(),
+                        amount: data.amount,
+                        date: data.date,
+                        note: data.note
+                    });
+                    save();
+                    renderPayouts();
+                    Swal.fire('ສຳເລັດ', 'ບັນທຶກການມອບເງິນງວດໃໝ່ຮຽບຮ້ອຍແລ້ວ', 'success');
+                }
+            });
+        }
+
+        function deletePayoutRecord(deathId, payoutId) {
+            let d = db.deaths.find(x => x.id === deathId);
+            if (d && d.payouts) {
+                d.payouts = d.payouts.filter(po => po.id !== payoutId);
+                save();
+                Swal.fire({
+                    title: 'ລົບສຳເລັດ',
+                    icon: 'success',
+                    timer: 1000,
+                    showConfirmButton: false
+                }).then(() => {
+                    openPayoutModal(deathId); // เปิด Popup กลับมาอัปเดตข้อมูล
+                    renderPayouts();
+                });
+            }
+        }
+
+        function toggleHandover(deathId) {
+            let d = db.deaths.find(x => x.id === deathId);
+            if (d) {
+                d.handedOver = !d.handedOver;
+                save();
+                Swal.fire('ສຳເລັດ', d.handedOver ? 'ບັນທຶກການມອບເງິນສຳເລັດແລ້ວ' : 'ຍົກເລີກສະຖານະການມອບເງິນແລ້ວ', 'success');
+            }
         }
 
         function delItem(type, id) {
@@ -1763,7 +1876,25 @@
         function totals() {
             let paid = db.payments.filter(x => x.status === 'confirmed').reduce((s, x) => s + x.amount, 0);
             let inc = db.entries.filter(x => x.type === 'income').reduce((s, x) => s + x.amount, 0);
-            let out = db.entries.filter(x => x.type === 'expense').reduce((s, x) => s + x.amount, 0);
+            let entryOut = db.entries.filter(x => x.type === 'expense').reduce((s, x) => s + x.amount, 0);
+            
+            // ₭ ລວມຍອດເງິນທີ່ມອບຊ່ວຍເຫຼືອທຸກງວດຈາກທຸກສົບ
+            let payoutOut = db.deaths.reduce((sum, d) => {
+                if (d.payouts && Array.isArray(d.payouts)) {
+                    let deathTotalPaid = d.payouts.reduce((poSum, po) => poSum + po.amount, 0);
+                    return sum + deathTotalPaid;
+                }
+                // Support legacy handedOver field if present
+                if (d.handedOver) {
+                    let collectedForThisDeath = db.payments
+                        .filter(p => p.deathId === d.id && p.status === 'confirmed')
+                        .reduce((s, p) => s + p.amount, 0);
+                    return sum + (collectedForThisDeath > 0 ? collectedForThisDeath : (d.total || (d.rate * d.count)));
+                }
+                return sum;
+            }, 0);
+
+            let out = entryOut + payoutOut;
             
             return { paid, inc, out, balance: paid + inc - out };
         }
@@ -1842,7 +1973,7 @@
             renderMembers();
             renderDeaths();
             renderPayments();
-            renderEntries();
+            renderPayouts();
             renderDashboard();
             renderReports();
         }
