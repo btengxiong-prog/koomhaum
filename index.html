@@ -447,11 +447,19 @@
             }
             .brand {
                 padding-bottom: 10px;
+                margin-bottom: 5px; /* ເພີ່ມຊ່ອງຫວ່າງບໍ່ໃຫ້ເມນູຕິດກາໂລໂກ້ເກີນໄປ */
             }
             .nav {
                 display: flex;
-                overflow: auto;
-                gap: 4px;
+                overflow-x: auto;
+                gap: 8px; /* ຍະຫວ່າງປຸ່ມໃຫ້ກົດງ່າຍຂຶ້ນ ບໍ່ຫຼົງໄປຖືກປຸ່ມອື່ນ */
+                padding-bottom: 8px; /* ຍູ້ Scrollbar ລົງບໍ່ໃຫ້ທັບປຸ່ມ */
+                scrollbar-width: none; /* ເຊື່ອງ Scrollbar ສຳລັບ Firefox */
+                -webkit-overflow-scrolling: touch; /* ເຮັດໃຫ້ເລື່ອນຊ້າຍຂວາສະມູດຂຶ້ນໃນ iOS */
+            }
+            /* ເຊື່ອງ Scrollbar ສຳລັບ Chrome/Safari/Edge ແຕ່ຍັງເລື່ອນໄດ້ປົກກະຕິ */
+            .nav::-webkit-scrollbar {
+                display: none;
             }
             .navlabel,
             .sidefoot {
@@ -459,7 +467,7 @@
             }
             .nav button {
                 min-width: max-content;
-                padding: 9px;
+                padding: 10px 16px; /* ຂະຫຍາຍພື້ນທີ່ປຸ່ມໃຫ້ໃຫຍ່ຂຶ້ນ ສຳຜັດງ່າຍຂຶ້ນ */
             }
             .top {
                 padding: 0 15px;
@@ -1522,35 +1530,38 @@
             });
         }
         
-        document.getElementById('paymentForm').onsubmit = e => {
-            e.preventDefault();
-            let memberVal = document.getElementById('pMember').value;
-            let deathId = document.getElementById('pDeath').value;
-            let amountStr = document.getElementById('pAmount').value;
-            let payAmount = Number(amountStr.replace(/,/g, '')) || 0; // ອ່ານຈຳນວນເງິນຕົວຈິງທີ່ປ້ອນໃນປ່ອງ
-            
-            db.payments.unshift({
-                id: 'P' + Date.now(),
-                memberId: memberVal.includes(' - ') ? memberVal.split(' - ')[0] : memberVal,
-                deathId: deathId,
-                amount: payAmount,
-                date: document.getElementById('pDate').value,
-                method: document.getElementById('pMethod').value,
-                status: document.getElementById('pStatus').value,
-                note: document.getElementById('pNote').value
-            });
-            
-            save();
-            e.target.reset();
-            document.getElementById('pDate').value = today();
-            updatePaymentRate(); // ອັບເດດຍອດລວມຄືນໃໝ່
-            
-            if (typeof Swal !== 'undefined') {
-                Swal.fire('ສຳເລັດ!', 'ບັນທຶກການຮັບເງິນສຳເລັດ', 'success');
-            } else {
-                alert('ບັນທຶກການຮັບເງິນສຳເລັດ');
-            }
-        };
+        let pForm = document.getElementById('paymentForm');
+        if (pForm) { // ໃສ່ເງື່ອນໄຂເພື່ອກວດສອບບໍ່ໃຫ້ມັນ Error ຖ້າບໍ່ມີຟອມນີ້ໃນ HTML ແລ້ວ
+            pForm.onsubmit = e => {
+                e.preventDefault();
+                let memberVal = document.getElementById('pMember').value;
+                let deathId = document.getElementById('pDeath').value;
+                let amountStr = document.getElementById('pAmount').value;
+                let payAmount = Number(amountStr.replace(/,/g, '')) || 0; 
+                
+                db.payments.unshift({
+                    id: 'P' + Date.now(),
+                    memberId: memberVal.includes(' - ') ? memberVal.split(' - ')[0] : memberVal,
+                    deathId: deathId,
+                    amount: payAmount,
+                    date: document.getElementById('pDate').value,
+                    method: document.getElementById('pMethod').value,
+                    status: document.getElementById('pStatus').value,
+                    note: document.getElementById('pNote').value
+                });
+                
+                save();
+                e.target.reset();
+                document.getElementById('pDate').value = today();
+                if (typeof updatePaymentRate === 'function') updatePaymentRate();
+                
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('ສຳເລັດ!', 'ບັນທຶກການຮັບເງິນສຳເລັດ', 'success');
+                } else {
+                    alert('ບັນທຶກການຮັບເງິນສຳເລັດ');
+                }
+            };
+        }
 
         function renderPayments() {
             document.getElementById('paymentRows').innerHTML = db.payments.map((p, index) => {
@@ -1878,13 +1889,20 @@
 
         // Initialize on load
         checkAuth(); // ກວດສອບສິດທິທຸກຄັ້ງທີ່ໂຫຼດໜ້າເວັບ
-        document.getElementById('dDate').value = today();
-        document.getElementById('pDate').value = today();
-        document.getElementById('eDate').value = today();
-        document.getElementById('dCount').value = db.members.length;
         
-        calcDeath();
-        loadCloudData(); // ເອີ້ນໂຫຼດຂໍ້ມູນຈາກ Cloud ແທນ renderAll ເດີມ
+        // ເພີ່ມການກວດສອບກ່ອນວ່າມີ Element ນັ້ນຢູ່ຈິງບໍ່ ເພື່ອປ້ອງກັນ Error
+        if (document.getElementById('dDate')) document.getElementById('dDate').value = today();
+        if (document.getElementById('pDate')) document.getElementById('pDate').value = today();
+        if (document.getElementById('eDate')) document.getElementById('eDate').value = today();
+        if (document.getElementById('dCount')) document.getElementById('dCount').value = db.members.length;
+        
+        if (typeof calcDeath === 'function') calcDeath();
+        
+        // ສັ່ງໃຫ້ເປີດໜ້າຫຼັກ ແລະ ອັບເດດຕົວເລກທັງໝົດທັນທີທີ່ໂຫຼດເວັບ
+        go('dashboard'); 
+        
+        // ດຶງຂໍ້ມູນໃໝ່ຈາກ Cloud ມາອັບເດດຊ້ອນທັບອີກຄັ້ງໃນເບື້ອງຫຼັງ
+        loadCloudData(); 
     </script>
 </body>
 </html>
