@@ -22,16 +22,16 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
+            height: 100vh;
+            overflow: hidden; /* ລັອກບໍ່ໃຫ້ມີ Scrollbar ຫຼັກຂອງ Browser */
             margin: 0;
-            background: var(--bg);
-            font-family: 'Times New Roman', 'Phetsarath OT', serif;
-            color: #1d2b40;
         }
 
         .app {
             display: flex;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
         }
 
         .side {
@@ -40,6 +40,8 @@
             color: #fff;
             padding: 24px 15px;
             flex-shrink: 0;
+            height: 100vh;
+            overflow-y: auto; /* ให้เมนูด้านข้างเลื่อนได้เองถ้าจอเตี้ย */
         }
 
         .brand {
@@ -544,11 +546,15 @@
                         <span style="font-size: 16px;">💾</span> ບັນທຶກກໍລະນີ
                     </button>
                     
-                    <!-- ກຸ່ມເຄື່ອງມືໜ້າຈັດການສະມາຊິກ -->
-                    <div id="topMemberActions" class="hidden" style="display: flex; align-items:center; gap: 10px;">
+                    <!-- ປ່ອງເລືອກຜູ້ເສຍຊີວິດໜ້າຈັດການສະມາຊິກ (ສະແດງໃຫ້ທຸກຄົນເຫັນທັງ Admin ແລະ ຢູເຊີທົ່ວໄປ) -->
+                    <div id="topMemberFilter" class="hidden" style="display: flex; align-items:center; gap: 10px;">
                         <select id="memberDeathSelect" onchange="renderMembers()" style="padding: 10px; border-radius: 8px; border: 1px solid var(--line); outline: none; background: #fff; font-family: inherit; cursor: pointer; font-size: 12px;">
                             <option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>
                         </select>
+                    </div>
+
+                    <!-- ກຸ່ມປຸ່ມຈັດການສະມາຊິກ (ສະແດງສະເພາະ Admin ເທົ່ານັ້ນ) -->
+                    <div id="topMemberActions" class="hidden" style="display: flex; align-items:center; gap: 10px;">
                         <button onclick="batchPayMembers()" style="font-family: inherit; background: #0f9d8a; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 6px rgba(15,157,138,0.3); transition: 0.2s;">
                             💰 ບັນທຶກຈ່າຍເງິນ
                         </button>
@@ -1127,6 +1133,15 @@
                     calcDeath();
                 } else {
                     topSaveBtn.classList.add('hidden');
+                }
+            }
+
+            let topMemberFilter = document.getElementById('topMemberFilter');
+            if (topMemberFilter) {
+                if (page === 'members') {
+                    topMemberFilter.classList.remove('hidden');
+                } else {
+                    topMemberFilter.classList.add('hidden');
                 }
             }
 
