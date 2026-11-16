@@ -158,7 +158,7 @@
         }
 
         .content {
-            padding: 28px;
+            padding: 12px 28px; /* ຫຼຸດໄລຍະຫ່າງດ້ານເທິງແລະລຸ່ມລົງເຫຼືອ 12px ເພື່ອບໍ່ໃຫ້ຫ່າງເກີນໄປ */
             max-width: 1500px;
             margin: auto;
         }
@@ -530,7 +530,7 @@
                 <button class="active" data-page="dashboard"><span class="ico">▦</span> ໜ້າຫຼັກ</button>
                 <button data-page="members"><span class="ico">👥</span> ຈັດການສະມາຊິກ</button>
                 <button data-page="deaths"><span class="ico">📋</span> ບັນທຶກກໍລະນີເສຍຊີວິດ</button>
-                <button data-page="payments"><span class="ico">💵</span> ເງິນສະຫຼະຊ່ວຍ</button>
+                <button data-page="payments"><span class="ico">📊</span> ສັງລວມຈ່າຍເງິນ</button>
                 <button data-page="expenses"><span class="ico">🧾</span> ລາຍຮັບ-ລາຍຈ່າຍ</button>
                 <button data-page="reports"><span class="ico">📊</span> ລາຍງານ</button>
                 <button data-page="backup"><span class="ico">💾</span> ສຳຮອງຂໍ້ມູນ</button>
@@ -574,15 +574,13 @@
                         </button>
                     </div>
 
-                    <!-- ກຸ່ມເຄື່ອງມືກອງຂໍ້ມູນໜ້າຮັບເງິນ -->
-                    <div id="topPaymentFilters" class="hidden" style="display: flex; align-items:center; gap: 10px;">
-                        <select id="paymentDeathSelect" onchange="renderPayments()" style="padding: 9px; border-radius: 8px; border: 1px solid var(--line); outline: none; background: #fff; font-family: inherit; cursor: pointer; font-size: 12px; max-width: 180px;">
-                            <option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>
-                        </select>
-                        <select id="paymentStatusSelect" onchange="renderPayments()" style="padding: 9px; border-radius: 8px; border: 1px solid var(--line); outline: none; background: #fff; font-family: inherit; cursor: pointer; font-size: 12px;">
+                    <!-- ກຸ່ມເຄື່ອງມືໜ້າສັງລວມຈ່າຍເງິນ (ຍ້າຍມາໄວ້ດ້ານເທິງ) -->
+                    <div id="topPaymentSummaryFilters" class="hidden" style="display: flex; align-items:center; gap: 12px;">
+                        <input class="search" id="paymentSummarySearch" placeholder="🔍 ຄົ້ນຫາຊື່ສະມາຊິກ, ລະຫັດ, ບ້ານ..." oninput="renderPayments()" style="width: 260px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 13.5px; font-weight: 600; background: #f8fafc; outline: none; transition: 0.2s;">
+                        <select id="paymentSummaryFilter" onchange="renderPayments()" style="padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; outline: none; background: #f8fafc; font-family: inherit; cursor: pointer; font-size: 13.5px; font-weight: 600; color: #1e293b; transition: 0.2s;">
                             <option value="all">ສະແດງທັງໝົດ</option>
-                            <option value="paid">🟢 ຊຳລະແລ້ວ</option>
-                            <option value="unpaid">🔴 ຍັງບໍ່ທັນຊຳລະ</option>
+                            <option value="completed">🟢 ຈ່າຍຄົບແລ້ວ</option>
+                            <option value="incomplete">🔴 ຍັງຈ່າຍບໍ່ຄົບ</option>
                         </select>
                     </div>
 
@@ -595,10 +593,10 @@
                     <div id="authGuest" style="display: flex; gap: 10px;">
                         <button onclick="loginAdmin()" style="font-family: inherit; background: #edf2f8; color: #1d2b40; border: none; border-radius: 20px; padding: 8px 16px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">🔐 ເຂົ້າສູ່ລະບົບ</button>
                     </div>
-                    <div id="authAdmin" class="hidden" style="display: flex; gap: 10px; align-items: center;">
-                        <div class="user">● ຜູ້ດູແລລະບົບ</div>
-                        <button onclick="logoutAdmin()" style="font-family: inherit; background: transparent; color: #dc4b55; border: 1px solid #ffcdcd; border-radius: 20px; padding: 6px 12px; font-size: 11px; cursor: pointer; transition: 0.2s;">ອອກຈາກລະບົບ</button>
-                    </div>
+                    <div id="authAdmin" class="hidden" style="display: flex; gap: 12px; align-items: center;">
+                    <div style="background: #d1fae5; color: #065f46; border-radius: 30px; padding: 8px 16px; font-size: 13.5px; font-weight: 700; box-shadow: 0 2px 5px rgba(5,150,105,0.1);">● ຜູ້ດູແລລະບົບ</div>
+                    <button onclick="logoutAdmin()" style="font-family: inherit; background: #fee2e2; color: #b91c1c; border: 1.5px solid #fecaca; border-radius: 20px; padding: 8px 16px; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(220,38,38,0.1);">ອອກຈາກລະບົບ</button>
+                </div>
                 </div>
             </header>
             
@@ -746,7 +744,7 @@
                     </div>
                 </section>
 
-                <!-- Payments Page -->
+                <!-- Payments Page (Member Payment Summary) -->
                 <section id="payments" class="page hidden">
                     <div class="panel">
                         <div class="tablewrap">
@@ -754,18 +752,23 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 50px;">ລ/ດ</th>
-                                        <th>ວັນທີ</th>
                                         <th>ລະຫັດ</th>
-                                        <th>ຄອບຄົວ</th>
-                                        <th>ຈຳນວນເງິນ</th>
-                                        <th>ວິທີຈ່າຍ</th>
-                                        <th>ສະຖານະ</th>
-                                        <th style="text-align:center;">
-                                            <input type="checkbox" id="checkAllPayments" onclick="toggleAllPayments(this)" style="width:16px;height:16px;cursor:pointer;" title="ຕິກທັງໝົດ">
-                                        </th>
+                                        <th>ຊື່ ແລະ ນາມສະກຸນ</th>
+                                        <th>ບ້ານ</th>
+                                        <th>ເມືອງ</th>
+                                        <th style="text-align: center;">ຈຳນວນສົບທີ່ຈ່າຍ</th>
+                                        <th style="text-align: right;">ຍອດເງິນລວມທີ່ຖອກ (ກີບ)</th>
+                                        <th style="text-align: center;">ສະຖານະ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="paymentRows"></tbody>
+                                <tfoot>
+                                    <tr style="background-color: #f8fafc; font-size: 14px;">
+                                        <td colspan="6" style="text-align: right; padding-right: 20px;"><b>ລວມຍອດເງິນສະສົມທັງໝົດ:</b></td>
+                                        <td style="text-align: right; color: var(--teal); font-weight: 800;"><span id="totalPaymentSummaryAmount">0</span></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -1168,12 +1171,12 @@
                 }
             }
             
-            let topPaymentFilters = document.getElementById('topPaymentFilters');
-            if (topPaymentFilters) {
+            let topPaymentSummaryFilters = document.getElementById('topPaymentSummaryFilters');
+            if (topPaymentSummaryFilters) {
                 if (page === 'payments') {
-                    topPaymentFilters.classList.remove('hidden'); // ສະແດງໃຫ້ທຸກຄົນເຫັນໄດ້
+                    topPaymentSummaryFilters.classList.remove('hidden');
                 } else {
-                    topPaymentFilters.classList.add('hidden');
+                    topPaymentSummaryFilters.classList.add('hidden');
                 }
             }
             
@@ -1616,78 +1619,67 @@
         }
 
         function renderPayments() {
-            let deathId = document.getElementById('paymentDeathSelect')?.value;
-            let statusFilter = document.getElementById('paymentStatusSelect')?.value || 'all'; 
-            
-            let html = '';
-            let count = 1;
-            let isAdmin = localStorage.getItem('isAdmin') === 'true';
-            
-            if (statusFilter === 'unpaid') {
-                // ຖ້າເລືອກ "ຍັງບໍ່ທັນຊຳລະ" ຕ້ອງບັງຄັບໃຫ້ເລືອກຊື່ຜູ້ເສຍຊີວິດກ່ອນ
-                if (!deathId) {
-                    html = '<tr><td colspan="8" class="empty" style="padding: 40px; color: #dc4b55;">⚠️ ກະລຸນາເລືອກ <b>"ຊື່ຜູ້ເສຍຊີວິດ"</b> ຈາກກ່ອງດ້ານເທິງກ່ອນ<br>ເພື່ອເບິ່ງລາຍຊື່ຄອບຄົວທີ່ຍັງບໍ່ທັນຊຳລະເງິນ</td></tr>';
-                } else {
-                    // ຊອກຫາຄົນທີ່ຈ່າຍແລ້ວ
-                    let paidMemberIds = db.payments.filter(p => p.deathId === deathId && p.status === 'confirmed').map(p => p.memberId);
-                    // ກັ່ນຕອງເອົາສະເພາະຄົນທີ່ບໍ່ມີຊື່ໃນບັນຊີການຈ່າຍ
-                    let unpaidMembers = db.members.filter(m => !paidMemberIds.includes(m.id));
-                    
-                    html = unpaidMembers.map(m => `
-                    <tr style="background-color: #fffafb;">
-                        <td>${count++}</td>
-                        <td class="muted">-</td>
-                        <td class="muted">-</td>
-                        <td><b>${esc(m.name)}</b> <small class="muted">(${esc(m.id)})</small></td>
-                        <td class="muted">0</td>
-                        <td class="muted">-</td>
-                        <td>
-                            <span class="tag bad">🔴 ຍັງບໍ່ຈ່າຍ</span>
-                        </td>
-                        <td style="text-align:center; ${isAdmin ? '' : 'display:none;'}">
-                            ${isAdmin ? `<button class="mini" style="background:#0f9d8a; color:white; font-weight:bold;" onclick="quickPay('${m.id}', '${deathId}')">💰 ຮັບເງິນ</button>` : ''}
-                        </td>
-                    </tr>`).join('') || '<tr><td colspan="8" class="empty">🎉 ທຸກຄອບຄົວຊຳລະເງິນສຳເລັດແລ້ວ ສຳລັບກໍລະນີນີ້</td></tr>';
-                }
-            } else {
-                // ສຳລັບກໍລະນີ "ສະແດງທັງໝົດ" ແລະ "ຊຳລະແລ້ວ"
-                let filtered = db.payments;
-                if (deathId) filtered = filtered.filter(p => p.deathId === deathId);
-                if (statusFilter === 'paid') filtered = filtered.filter(p => p.status === 'confirmed');
+            let q = (document.getElementById('paymentSummarySearch')?.value || '').toLowerCase();
+            let statusFilter = document.getElementById('paymentSummaryFilter')?.value || 'all';
+            let totalDeathsCount = db.deaths.length;
+
+            // ສັງລວມຂໍ້ມູນການຈ່າຍເງິນຂອງແຕ່ລະສະມາຊິກ
+            let summaryList = db.members.map(m => {
+                let memberPayments = db.payments.filter(p => p.memberId === m.id && p.status === 'confirmed');
+                let totalPaidAmount = memberPayments.reduce((sum, p) => sum + p.amount, 0);
                 
-                html = filtered.map((p) => {
-                    let formattedDate = p.date ? p.date.split('-').reverse().join('/') : '';
-                    return `
-                    <tr>
-                        <td>${count++}</td>
-                        <td>${esc(formattedDate)}</td>
-                        <td>${esc(p.id)}</td>
-                        <td>${esc(member(p.memberId)?.name || '—')}</td>
-                        <td><b>${money(p.amount)}</b></td>
-                        <td>${esc(p.method)}</td>
-                        <td>
-                            <span class="tag ${p.status === 'pending' ? 'pending' : ''}">
-                                ${p.status === 'pending' ? 'ລໍຖ້າກວດ' : 'ຢືນຢັນແລ້ວ'}
-                            </span>
-                        </td>
-                        <td style="text-align:center; ${isAdmin ? '' : 'display:none;'}">
-                            ${isAdmin ? `
-                            <div class="actions" style="justify-content: center; align-items: center;">
-                                ${p.status === 'pending' ? `<button class="mini" onclick="verify('${p.id}')">ຢືນຢັນ</button>` : ''}
-                                <input type="checkbox" class="chk-payment" value="${esc(p.id)}" style="width:16px;height:16px;cursor:pointer;">
-                            </div>` : ''}
-                        </td>
-                    </tr>`;
-                }).join('') || '<tr><td colspan="8" class="empty">ຍັງບໍ່ມີລາຍການ</td></tr>';
+                // ນับຈຳນວນສົບທີ່ຈ່າຍແລ້ວ (ບໍ່ໃຫ້ນັບຊ້ຳໃນສົບເດີມ)
+                let paidDeathIds = [...new Set(memberPayments.map(p => p.deathId))];
+                let paidCount = paidDeathIds.length;
+                
+                let isCompleted = totalDeathsCount > 0 && paidCount >= totalDeathsCount;
+
+                return {
+                    member: m,
+                    paidCount: paidCount,
+                    totalPaidAmount: totalPaidAmount,
+                    isCompleted: isCompleted,
+                    searchStr: [m.id, m.name, m.phone, m.village, m.district].join(' ').toLowerCase()
+                };
+            });
+
+            // ກອງຂໍ້ມູນຕາມຄຳຄົ້ນຫາ
+            let filtered = summaryList.filter(x => x.searchStr.includes(q));
+
+            // ກອງຂໍ້ມູນຕາມສະຖານະ
+            if (statusFilter === 'completed') {
+                filtered = filtered.filter(x => x.isCompleted);
+            } else if (statusFilter === 'incomplete') {
+                filtered = filtered.filter(x => !x.isCompleted);
             }
-            
+
+            let grandTotal = 0;
+            let html = filtered.map((item, index) => {
+                grandTotal += item.totalPaidAmount;
+                let statusTag = totalDeathsCount === 0 ? 
+                    `<span class="tag muted">ຍັງບໍ່ມີກໍລະນີເສຍຊີວິດ</span>` :
+                    (item.isCompleted ? 
+                        `<span class="tag">🟢 ຈ່າຍຄົບ (${item.paidCount}/${totalDeathsCount})</span>` : 
+                        `<span class="tag bad">🔴 ຍັງຂາດ (${item.paidCount}/${totalDeathsCount})</span>`
+                    );
+
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${esc(item.member.id)}</td>
+                        <td><b>${esc(item.member.name)}</b></td>
+                        <td>${esc(item.member.village)}</td>
+                        <td>${esc(item.member.district)}</td>
+                        <td style="text-align: center;">${item.paidCount} / ${totalDeathsCount}</td>
+                        <td style="text-align: right; color: var(--teal); font-weight: bold;">${money(item.totalPaidAmount)}</td>
+                        <td style="text-align: center;">${statusTag}</td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="8" class="empty">ບໍ່ພົບຂໍ້ມູນສະມາຊິກ</td></tr>';
+
             document.getElementById('paymentRows').innerHTML = html;
-            
-            let checkAll = document.getElementById('checkAllPayments');
-            if (checkAll) checkAll.checked = false;
-            
-            let thCheckPay = document.querySelector('#payments thead th:last-child');
-            if (thCheckPay) thCheckPay.style.display = isAdmin ? '' : 'none';
+            let totalEl = document.getElementById('totalPaymentSummaryAmount');
+            if (totalEl) totalEl.textContent = money(grandTotal);
         }
 
         function verify(id) {
