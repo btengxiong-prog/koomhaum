@@ -743,7 +743,12 @@
                         </form>
                     </div>
                     <div class="panel" style="margin-top:16px">
-                        <h3>ປະຫວັດການຮັບເງິນ</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin: 0;">ປະຫວັດການຮັບເງິນ</h3>
+                            <button type="button" onclick="delSelectedPayments()" style="background: #dc4b55; color: white; border: none; border-radius: 8px; padding: 8px 15px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 3px 6px rgba(220,75,85,0.2); transition: 0.2s;">
+                                🗑️ ລຶບລາຍການທີ່ເລືອກ
+                            </button>
+                        </div>
                         <div class="tablewrap">
                             <table>
                                 <thead>
@@ -755,7 +760,9 @@
                                         <th>ຈຳນວນເງິນ</th>
                                         <th>ວິທີຈ່າຍ</th>
                                         <th>ສະຖານະ</th>
-                                        <th></th>
+                                        <th style="text-align:center;">
+                                            <input type="checkbox" id="checkAllPayments" onclick="toggleAllPayments(this)" style="width:16px;height:16px;cursor:pointer;" title="ຕິກທັງໝົດ">
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="paymentRows"></tbody>
@@ -1020,6 +1027,13 @@
         
         const KEY = 'welfareFund_v1';
         let db = JSON.parse(localStorage.getItem(KEY) || 'null') || { members: initialMembers, deaths: [], payments: [], entries: [] };
+        
+        // ຮັບປະກັນວ່າໂຄງສ້າງຂໍ້ມູນ (Arrays) ຕ້ອງມີຄົບຖ້ວນສະເໝີ ປ້ອງກັນ Error ຈາກ Cache ເກົ່າ
+        db.members = db.members || initialMembers;
+        db.deaths = db.deaths || [];
+        db.payments = db.payments || [];
+        db.entries = db.entries || [];
+
         let isInitialized = false;
         let supabaseClient = null;
 
@@ -1044,6 +1058,13 @@
                 // 1. ກວດສອບຖ້າຂໍ້ມູນໃນ Cloud ມີ members ຄົບຖ້ວນ ຈຶ່ງໂຫຼດລົງມາໃຊ້
                 if (data && data.data && data.data.members && data.data.members.length > 0) {
                     db = data.data;
+                    
+                    // ຈັດການໂຄງສ້າງຂໍ້ມູນອີກຄັ້ງຫຼັງຈາກດຶງຈາກ Cloud ມາ
+                    db.members = db.members || initialMembers;
+                    db.deaths = db.deaths || [];
+                    db.payments = db.payments || [];
+                    db.entries = db.entries || [];
+                    
                     localStorage.setItem(KEY, JSON.stringify(db));
                     console.log("ໂຫຼດຂໍ້ມູນຈາກ Cloud ສຳເລັດ!");
                 } else {
@@ -1596,14 +1617,18 @@
                             ${p.status === 'pending' ? 'ລໍຖ້າກວດ' : 'ຢືນຢັນແລ້ວ'}
                         </span>
                     </td>
-                    <td>
-                        <div class="actions">
+                    <td style="text-align:center;">
+                        <div class="actions" style="justify-content: center; align-items: center;">
                             ${p.status === 'pending' ? `<button class="mini" onclick="verify('${p.id}')">ຢືນຢັນ</button>` : ''}
-                            <button class="mini del" onclick="delItem('payments','${p.id}')">ລົບ</button>
+                            <input type="checkbox" class="chk-payment" value="${esc(p.id)}" style="width:16px;height:16px;cursor:pointer;">
                         </div>
                     </td>
                 </tr>`;
             }).join('') || '<tr><td colspan="8" class="empty">ຍັງບໍ່ມີລາຍການ</td></tr>';
+
+            // ຍົກເລີກການຕິກ "ຕິກທັງໝົດ" ທຸກຄັ້ງທີ່ໂຫຼດຕາຕະລາງໃໝ່
+            let checkAll = document.getElementById('checkAllPayments');
+            if (checkAll) checkAll.checked = false;
         }
 
         function verify(id) {
@@ -1612,6 +1637,36 @@
                 p.status = 'confirmed';
                 save();
             }
+        }
+
+        function toggleAllPayments(source) {
+            let checkboxes = document.querySelectorAll('.chk-payment');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+        }
+
+        function delSelectedPayments() {
+            let checked = Array.from(document.querySelectorAll('.chk-payment:checked')).map(cb => cb.value);
+            if (checked.length === 0) {
+                return Swal.fire('ແຈ້ງເຕືອນ', 'ກະລຸນາຕິກເລືອກລາຍການທີ່ຕ້ອງການລຶບຢ່າງໜ້ອຍ 1 ລາຍການ', 'warning');
+            }
+            
+            Swal.fire({
+                title: 'ຢືນຢັນການລຶບ',
+                text: `ຢືນຢັນລຶບປະຫວັດການຮັບເງິນຈຳນວນ ${checked.length} ລາຍການ? ເມື່ອລຶບແລ້ວຈະບໍ່ສາມາດກູ້ຄືນໄດ້!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc4b55',
+                cancelButtonColor: '#718096',
+                confirmButtonText: 'ລຶບຂໍ້ມູນ',
+                cancelButtonText: 'ຍົກເລີກ'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // ກັ່ນຕອງເອົາສະເພາະລາຍການທີ່ບໍ່ຖືກຕິກ (ເກັບໄວ້), ອັນທີ່ຕິກຈະຖືກລຶບ
+                    db.payments = db.payments.filter(p => !checked.includes(p.id));
+                    save(); // ບັນທຶກ ແລະ ອັບເດດໜ້າຈໍ
+                    Swal.fire('ລຶບສຳເລັດ!', 'ລາຍການຮັບເງິນທີ່ເລືອກຖືກລຶບອອກແລ້ວ.', 'success');
+                }
+            });
         }
 
         document.getElementById('expenseForm').onsubmit = e => {
@@ -1716,15 +1771,17 @@
             
             let pDeathEl = document.getElementById('pDeath');
             let de = pDeathEl.value;
-            pDeathEl.innerHTML = '<option value="">ບໍ່ລະບຸ / ອື່ນໆ</option>' + db.deaths.map(d => 
+            // ໃຊ້ (db.deaths || []) ເພື່ອປ້ອງກັນ Error ເວລາ Array ເປົ່າຫວ່າງ
+            pDeathEl.innerHTML = '<option value="">ບໍ່ລະບຸ / ອື່ນໆ</option>' + (db.deaths || []).map(d => 
                 `<option value="${d.id}">${esc(d.date)} - ${esc(d.name)}</option>`
             ).join('');
             pDeathEl.value = de;
-            
+
             let mDeathEl = document.getElementById('memberDeathSelect');
             if(mDeathEl) {
                 let mde = mDeathEl.value;
-                mDeathEl.innerHTML = '<option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>' + db.deaths.map(d => 
+                // ໃຊ້ (db.deaths || []) ເຊັ່ນດຽວກັນ
+                mDeathEl.innerHTML = '<option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>' + (db.deaths || []).map(d => 
                     `<option value="${d.id}">${esc(d.date)} - ${esc(d.name)}</option>`
                 ).join('');
                 mDeathEl.value = mde;
