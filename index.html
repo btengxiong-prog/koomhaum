@@ -491,10 +491,21 @@
         body.view-only #topDeletePaymentsBtn,
         body.view-only #topMemberActions,
         body.view-only [data-page="backup"],
-        body.view-only .pagehead button.green,
-        body.view-only .tablewrap th:last-child,
-        body.view-only .tablewrap td:last-child {
+        body.view-only .pagehead button.green {
             display: none !important;
+        }
+
+        /* ເຊື່ອງຖັນ "ຕິກ/ຈັດການ" ຖັນສຸດທ້າຍຂອງທຸກຕາຕະລາງ ຖ້າເປັນຢູເຊີທົ່ວໄປ */
+        body.view-only table th:last-child,
+        body.view-only table td:last-child {
+            display: none !important;
+        }
+        
+        /* ສຳລັບຕາຕະລາງສະມາຊິກ ເພີ່ມການປິດການຕິກທັງໝົດ */
+        body.view-only .chk-member, 
+        body.view-only #checkAllMembers {
+            pointer-events: none;
+            opacity: 0.5;
         }
     </style>
 </head>
