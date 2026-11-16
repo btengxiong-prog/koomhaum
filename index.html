@@ -717,10 +717,6 @@
                                     <textarea id="dNote" rows="2"></textarea>
                                 </div>
                             </div>
-                            <!-- ປຸ່ມບັນທຶກດ້ານລຸ່ມ -->
-                            <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
-                                <button class="btn green" type="submit" style="padding: 10px 25px; font-size: 14px; font-weight: bold;">＋ ບັນທຶກກໍລະນີ</button>
-                            </div>
                         </form>
                     </div>
                     <div class="panel" style="margin-top:16px">
@@ -1441,6 +1437,47 @@
                 alert('ບັນທຶກຂໍ້ມູນສະມາຊິກສຳເລັດ');
             }
         };
+
+        let deathFormEl = document.getElementById('deathForm');
+        if (deathFormEl) {
+            deathFormEl.onsubmit = e => {
+                e.preventDefault();
+                let name = document.getElementById('dName').value.trim();
+                let memberInput = document.getElementById('dMember').value.trim();
+                let rate = Number(document.getElementById('dRate').value.replace(/,/g, '')) || 0;
+                let date = document.getElementById('dDate').value;
+                let count = Number(document.getElementById('dCount').value) || 0;
+                let total = rate * count;
+                let note = document.getElementById('dNote').value.trim();
+
+                // ดึงເອົາສະເພາະ ID ສະມາຊິກ (ກໍລະນີເລືອກຈາກ Datalist ເຊັ່ນ "WF0001 - Name")
+                let memberId = memberInput.includes(' - ') ? memberInput.split(' - ')[0] : memberInput;
+
+                db.deaths.unshift({
+                    id: 'D' + Date.now(),
+                    name: name,
+                    memberId: memberId,
+                    rate: rate,
+                    count: count,
+                    total: total,
+                    note: note,
+                    date: date,
+                    payouts: []
+                });
+
+                save();
+                deathFormEl.reset();
+                document.getElementById('dDate').value = today();
+                document.getElementById('dCount').value = db.members.length;
+                calcDeath();
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('ສຳເລັດ!', 'ບັນທຶກກໍລະນີເສຍຊີວິດຮຽບຮ້ອຍແລ້ວ', 'success');
+                } else {
+                    alert('ບັນທຶກກໍລະນີເສຍຊີວິດສຳເລັດ');
+                }
+            };
+        }
 
         function renderDatalist() {
             let dl = document.getElementById('memberList');
