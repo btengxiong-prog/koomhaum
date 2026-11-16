@@ -1097,11 +1097,12 @@
             
             document.getElementById('topTitle').textContent = document.querySelector(`[data-page="${page}"]`).textContent.trim();
             
+            let isAdmin = localStorage.getItem('isAdmin') === 'true';
+
             let topSaveBtn = document.getElementById('topSaveDeathBtn');
             if (topSaveBtn) {
-                if (page === 'deaths') {
+                if (page === 'deaths' && isAdmin) {
                     topSaveBtn.classList.remove('hidden');
-                    // ດຶງຈຳນວນສະມາຊິກຫຼ້າສຸດມາໃສ່ອັດຕະໂນມັດ
                     document.getElementById('dCount').value = db.members.length;
                     calcDeath();
                 } else {
@@ -1111,18 +1112,16 @@
 
             let topMemberActions = document.getElementById('topMemberActions');
             if (topMemberActions) {
-                if (page === 'members') {
-                    // ແກ້ຈຸດນີ້: ໃຊ້ classList.remove ແທນການກຳນົດ style ໂດຍກົງ
+                if (page === 'members' && isAdmin) {
                     topMemberActions.classList.remove('hidden'); 
                 } else {
                     topMemberActions.classList.add('hidden');
                 }
             }
             
-            // ຄວບຄຸມການສະແດງຜົນປຸ່ມ "ລຶບລາຍການທີ່ເລືອກ" ໃນໜ້າຮັບເງິນ
             let topDelPayBtn = document.getElementById('topDeletePaymentsBtn');
             if (topDelPayBtn) {
-                if (page === 'payments') {
+                if (page === 'payments' && isAdmin) {
                     topDelPayBtn.classList.remove('hidden');
                 } else {
                     topDelPayBtn.classList.add('hidden');
@@ -1168,6 +1167,7 @@
                     checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" style="width:16px;height:16px;cursor:pointer;">`;
                 }
 
+                let isAdmin = localStorage.getItem('isAdmin') === 'true';
                 return `
                 <tr>
                     <td>${index + 1}</td>
@@ -1178,18 +1178,22 @@
                     <td>${esc(m.district)}</td>
                     <td>${esc(m.province)}</td>
                     <td>${amountHtml}</td>
-                    <td style="text-align:center;">
-                        ${checkboxHtml}
+                    <td style="text-align:center; ${isAdmin ? '' : 'display:none;'}">
+                        ${isAdmin ? checkboxHtml : ''}
                     </td>
                 </tr>
                 `;
             }).join('') || '<tr><td colspan="9" class="empty">ບໍ່ພົບຂໍ້ມູນ</td></tr>';
             
-            // ຍົກເລີກການຕິກ "ຕິກທັງໝົດ" ທຸກຄັ້ງທີ່ໂຫຼດຕາຕະລາງໃໝ່
             let checkAll = document.getElementById('checkAllMembers');
             if (checkAll) checkAll.checked = false;
             
-            // ສັ່ງຄຳນວນຍອດລວມທັນທີ
+            // ເຊື່ອງຫົວ (th) ແລະ ຕີນຕາຕະລາງ (tfoot) ຖ້າບໍ່ແມ່ນແອັດມິນ
+            let thCheck = document.querySelector('#members thead th:last-child');
+            if (thCheck) thCheck.style.display = localStorage.getItem('isAdmin') === 'true' ? '' : 'none';
+            let tfCheck = document.querySelector('#members tfoot td:last-child');
+            if (tfCheck) tfCheck.style.display = localStorage.getItem('isAdmin') === 'true' ? '' : 'none';
+            
             calculateTableTotal();
         }
 
@@ -1564,18 +1568,22 @@
                             ${p.status === 'pending' ? 'ລໍຖ້າກວດ' : 'ຢືນຢັນແລ້ວ'}
                         </span>
                     </td>
-                    <td style="text-align:center;">
+                    <td style="text-align:center; ${localStorage.getItem('isAdmin') === 'true' ? '' : 'display:none;'}">
+                        ${localStorage.getItem('isAdmin') === 'true' ? `
                         <div class="actions" style="justify-content: center; align-items: center;">
                             ${p.status === 'pending' ? `<button class="mini" onclick="verify('${p.id}')">ຢືນຢັນ</button>` : ''}
                             <input type="checkbox" class="chk-payment" value="${esc(p.id)}" style="width:16px;height:16px;cursor:pointer;">
-                        </div>
+                        </div>` : ''}
                     </td>
                 </tr>`;
             }).join('') || '<tr><td colspan="8" class="empty">ຍັງບໍ່ມີລາຍການ</td></tr>';
 
-            // ຍົກເລີກການຕິກ "ຕິກທັງໝົດ" ທຸກຄັ້ງທີ່ໂຫຼດຕາຕະລາງໃໝ່
             let checkAll = document.getElementById('checkAllPayments');
             if (checkAll) checkAll.checked = false;
+            
+            // ເຊື່ອງຫົວ (th) ຂອງຕາຕະລາງຮັບເງິນ
+            let thCheckPay = document.querySelector('#payments thead th:last-child');
+            if (thCheckPay) thCheckPay.style.display = localStorage.getItem('isAdmin') === 'true' ? '' : 'none';
         }
 
         function verify(id) {
@@ -1797,15 +1805,29 @@
 
         // --- ລະບົບ Login ຜູ້ດູແລ ---
         function checkAuth() {
+            // ກວດສອບໃຫ້ແນ່ໃຈວ່າຄ່າເປັນ 'true' ເທົ່ານັ້ນ ຈຶ່ງຈະເປັນ Admin
             let isAdmin = localStorage.getItem('isAdmin') === 'true';
+            
             if (isAdmin) {
                 document.body.classList.remove('view-only');
                 document.getElementById('authAdmin').classList.remove('hidden');
                 document.getElementById('authGuest').classList.add('hidden');
+                
+                // ຖ້າເປັນ Admin ແລະ ຢູ່ໜ້າ members ໃຫ້ສະແດງເຄື່ອງມື
+                let topMemberActions = document.getElementById('topMemberActions');
+                if (topMemberActions && !document.getElementById('members').classList.contains('hidden')) {
+                    topMemberActions.classList.remove('hidden');
+                }
             } else {
                 document.body.classList.add('view-only');
                 document.getElementById('authAdmin').classList.add('hidden');
                 document.getElementById('authGuest').classList.remove('hidden');
+                
+                // ບັງຄັບເຊື່ອງເຄື່ອງມື Admin ທັນທີ ຖ້າບໍ່ມີສິດ
+                let topMemberActions = document.getElementById('topMemberActions');
+                if (topMemberActions) {
+                    topMemberActions.classList.add('hidden');
+                }
                 
                 // ຖ້າບໍ່ມີສິດ ແລ້ວຫຼົງເຂົ້າໄປໜ້າສຳຮອງຂໍ້ມູນ (Backup) ໃຫ້ດີດກັບມາໜ້າຫຼັກ
                 if (!document.getElementById('backup').classList.contains('hidden')) {
@@ -1838,9 +1860,20 @@
         }
 
         function logoutAdmin() {
-            localStorage.setItem('isAdmin', 'false');
+            // ລຶບຄ່າ isAdmin ອອກຈາກ localStorage ເລີຍ ເພື່ອຄວາມແນ່ນອນ
+            localStorage.removeItem('isAdmin');
             checkAuth();
-            Swal.fire('ສຳເລັດ', 'ອອກຈາກລະບົບຜູ້ດູແລແລ້ວ', 'info');
+            
+            Swal.fire({
+                title: 'ສຳເລັດ',
+                text: 'ອອກຈາກລະບົບຜູ້ດູແລແລ້ວ',
+                icon: 'info',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                // ບັງຄັບ Refresh ໜ້າເວັບ ເພື່ອລ້າງ Cache ຂອງຕາຕະລາງ ແລະ ເຄື່ອງມືຕ່າງໆ
+                window.location.reload();
+            });
         }
 
         // Initialize on load
