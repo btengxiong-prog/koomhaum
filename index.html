@@ -484,6 +484,18 @@
                 grid-column: auto;
             }
         }
+
+        /* ລະບົບສິດທິຜູ້ໃຊ້ (ເຊື່ອງເຄື່ອງມືຜູ້ດູແລອັດຕະໂນມັດ ຖ້າເປັນຢູເຊີທົ່ວໄປ) */
+        body.view-only form,
+        body.view-only #topSaveDeathBtn,
+        body.view-only #topDeletePaymentsBtn,
+        body.view-only #topMemberActions,
+        body.view-only [data-page="backup"],
+        body.view-only .pagehead button.green,
+        body.view-only .tablewrap th:last-child,
+        body.view-only .tablewrap td:last-child {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -548,21 +560,21 @@
                         🗑️ ລຶບລາຍການທີ່ເລືອກ
                     </button>
 
-                    <div class="user">● ຜູ້ດູແລລະບົບ</div>
+                    <!-- ກຸ່ມປຸ່ມເຂົ້າສູ່ລະບົບ / ອອກຈາກລະບົບ -->
+                    <div id="authGuest" style="display: flex; gap: 10px;">
+                        <button onclick="loginAdmin()" style="font-family: inherit; background: #edf2f8; color: #1d2b40; border: none; border-radius: 20px; padding: 8px 16px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">🔐 ເຂົ້າສູ່ລະບົບ</button>
+                    </div>
+                    <div id="authAdmin" class="hidden" style="display: flex; gap: 10px; align-items: center;">
+                        <div class="user">● ຜູ້ດູແລລະບົບ</div>
+                        <button onclick="logoutAdmin()" style="font-family: inherit; background: transparent; color: #dc4b55; border: 1px solid #ffcdcd; border-radius: 20px; padding: 6px 12px; font-size: 11px; cursor: pointer; transition: 0.2s;">ອອກຈາກລະບົບ</button>
+                    </div>
                 </div>
             </header>
             
             <div class="content">
                 <!-- Dashboard Page -->
                 <section id="dashboard" class="page">
-                    <div class="pagehead">
-                        <div>
-                            <h1>ພາບລວມກອງທຶນ</h1>
-                            <p>ຕິດຕາມສະມາຊິກ, ການຮັບ-ຈ່າຍ ແລະ ຍອດເງິນ</p>
-                        </div>
-                        <button class="btn green" onclick="go('payments')">＋ ບັນທຶກຮັບເງິນ</button>
-                    </div>
-
+                    
                     <div class="stats">
                         <div class="stat">
                             <span class="symbol">👥</span>
@@ -1783,7 +1795,56 @@
             r.readAsText(f);
         }
 
+        // --- ລະບົບ Login ຜູ້ດູແລ ---
+        function checkAuth() {
+            let isAdmin = localStorage.getItem('isAdmin') === 'true';
+            if (isAdmin) {
+                document.body.classList.remove('view-only');
+                document.getElementById('authAdmin').classList.remove('hidden');
+                document.getElementById('authGuest').classList.add('hidden');
+            } else {
+                document.body.classList.add('view-only');
+                document.getElementById('authAdmin').classList.add('hidden');
+                document.getElementById('authGuest').classList.remove('hidden');
+                
+                // ຖ້າບໍ່ມີສິດ ແລ້ວຫຼົງເຂົ້າໄປໜ້າສຳຮອງຂໍ້ມູນ (Backup) ໃຫ້ດີດກັບມາໜ້າຫຼັກ
+                if (!document.getElementById('backup').classList.contains('hidden')) {
+                    go('dashboard');
+                }
+            }
+        }
+
+        function loginAdmin() {
+            Swal.fire({
+                title: 'ເຂົ້າສູ່ລະບົບຜູ້ດູແລ',
+                input: 'password',
+                inputPlaceholder: 'ປ້ອນລະຫັດຜ່ານ...',
+                showCancelButton: true,
+                confirmButtonText: 'ເຂົ້າສູ່ລະບົບ',
+                cancelButtonText: 'ຍົກເລີກ',
+                confirmButtonColor: '#2563eb',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // ລະຫັດຜ່ານເລີ່ມຕົ້ນຄື: admin123 (ສາມາດປ່ຽນເປັນອັນອື່ນໄດ້ຕາມຕ້ອງການ)
+                    if (result.value === 'admin123') {
+                        localStorage.setItem('isAdmin', 'true');
+                        checkAuth();
+                        Swal.fire('ສຳເລັດ', 'ເຂົ້າສູ່ລະບົບຜູ້ດູແລຮຽບຮ້ອຍແລ້ວ', 'success');
+                    } else {
+                        Swal.fire('ຜິດພາດ', 'ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!', 'error');
+                    }
+                }
+            });
+        }
+
+        function logoutAdmin() {
+            localStorage.setItem('isAdmin', 'false');
+            checkAuth();
+            Swal.fire('ສຳເລັດ', 'ອອກຈາກລະບົບຜູ້ດູແລແລ້ວ', 'info');
+        }
+
         // Initialize on load
+        checkAuth(); // ກວດສອບສິດທິທຸກຄັ້ງທີ່ໂຫຼດໜ້າເວັບ
         document.getElementById('dDate').value = today();
         document.getElementById('pDate').value = today();
         document.getElementById('eDate').value = today();
