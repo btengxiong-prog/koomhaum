@@ -1397,17 +1397,28 @@
             }
         }
 
-        // ຟັງຊັນໃໝ່: ຄຳນວນຍອດລວມໃນຕາຕະລາງ (ສະເພາະຜູ້ທີ່ຈ່າຍແລ້ວ ຫຼື ຖືກຕິກເລືອກ)
+        // ຟັງຊັນຄຳນວນຍອດລວມໃນຕາຕະລາງ (Admin: ບວກສະເພາະອັນທີ່ຕິກ, ຢູເຊີທົ່ວໄປ: ບວກທຸກລາຍການທີ່ສະແດງ)
         function calculateTableTotal() {
             let total = 0;
             let rows = document.getElementById('memberRows').getElementsByTagName('tr');
+            let isAdmin = localStorage.getItem('isAdmin') === 'true';
+            
             for(let i = 0; i < rows.length; i++) {
                 let cell = rows[i].getElementsByTagName('td')[7]; // ຄໍລຳທີ 8 (index 7) ຄືຈຳນວນເງິນ
                 let cb = rows[i].querySelector('.chk-member');
-                if(cell && cb && cb.checked) {
+                if(cell) {
                     let text = cell.textContent || cell.innerText;
                     let val = Number(text.replace(/,/g, '').replace(/-/g, '')) || 0;
-                    total += val;
+                    
+                    if (isAdmin) {
+                        // ສຳລັບ Admin: ບວກສະເພາະແຖວທີ່ມີການຕິກ Checkbox
+                        if (cb && cb.checked) {
+                            total += val;
+                        }
+                    } else {
+                        // ສຳລັບ ຢູເຊີທົ່ວໄປ: ບວກທຸກລາຍການທີ່ມີຈຳນວນເງິນສະແດງຜົນຢູ່
+                        total += val;
+                    }
                 }
             }
             let totalEl = document.getElementById('totalMemberAmount');
