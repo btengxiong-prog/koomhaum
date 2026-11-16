@@ -1040,33 +1040,53 @@
             }
             try {
                 const { data, error } = await supabaseClient.from('welfare_data').select('data').eq('id', 1).single();
-                if (data && data.data && data.data.members) {
+
+                // 1. ກວດສອບຖ້າຂໍ້ມູນໃນ Cloud ມີ members ຄົບຖ້ວນ ຈຶ່ງໂຫຼດລົງມາໃຊ້
+                if (data && data.data && data.data.members && data.data.members.length > 0) {
                     db = data.data;
                     localStorage.setItem(KEY, JSON.stringify(db));
+                    console.log("ໂຫຼດຂໍ້ມູນຈາກ Cloud ສຳເລັດ!");
                 } else {
-                    await supabaseClient.from('welfare_data').upsert({ id: 1, data: db });
+                    // 2. ຖ້າ Cloud ເປັນ {} ຫຼື ຍັງບໍ່ມີຂໍ້ມູນສະມາຊິກ, ບັງຄັບຍູ້ຂໍ້ມູນຈາກເຄື່ອງ (Local) ຂຶ້ນໄປທັບ
+                    console.log("Cloud ຍັງເປົ່າຫວ່າງ, ກຳລັງຍູ້ຂໍ້ມູນຈາກເຄື່ອງນີ້ຂຶ້ນໄປແທນທີ່...");
+                    const { error: upsertErr } = await supabaseClient.from('welfare_data').upsert({ id: 1, data: db });
+                    if (upsertErr) console.error("ຍູ້ຂໍ້ມູນເບື້ອງຕົ້ນບໍ່ສຳເລັດ:", upsertErr);
                 }
+                
                 isInitialized = true;
                 
+                // 3. ເປີດລະບົບຮັບຟັງການປ່ຽນແປງ (Realtime)
                 supabaseClient.channel('welfare-sync')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'welfare_data' }, (payload) => {
                         if (payload.new && payload.new.data) {
+                            console.log("🔄 ອັບເດດ Realtime ຈາກເຄື່ອງອື່ນ!");
                             db = payload.new.data;
                             localStorage.setItem(KEY, JSON.stringify(db));
                             renderAll();
+                            if (typeof updatePaymentRate === 'function') updatePaymentRate();
                         }
                     }).subscribe();
             } catch (e) {
                 console.error("ການດຶງຂໍ້ມູນ Cloud ມີບັນຫາ", e);
+                isInitialized = true; // ຍັງຄົງເປີດໃຫ້ລະບົບພະຍາຍາມບັນທຶກໃນຄັ້ງຕໍ່ໄປ
             }
             renderAll();
         }
 
         const save = async () => {
-            localStorage.setItem(KEY, JSON.stringify(db)); // ບັນທຶກລົງເຄື່ອງໄວ້ກັນໜຽວກ່ອນສະເໝີ
+            localStorage.setItem(KEY, JSON.stringify(db)); 
             renderAll(); 
             if (isInitialized && supabaseClient) {
-                await supabaseClient.from('welfare_data').upsert({ id: 1, data: db });
+                const { error } = await supabaseClient.from('welfare_data').upsert({ id: 1, data: db });
+                if (error) {
+                    console.error("❌ ບັນທຶກລົງ Cloud ບໍ່ສຳເລັດ:", error);
+                    // ແຈ້ງເຕືອນຖ້າຊິງຄ໌ບໍ່ຂຶ້ນ
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('ຂໍ້ຜິດພາດ!', 'ບໍ່ສາມາດຊິງຄ໌ຂໍ້ມູນຂຶ້ນ Cloud ໄດ້, ລະບົບຈະບັນທຶກໄວ້ໃນເຄື່ອງກ່ອນ.', 'error');
+                    }
+                } else {
+                    console.log("✅ ຊິງຄ໌ຂໍ້ມູນລົງ Cloud ສຳເລັດ");
+                }
             }
         };
 
