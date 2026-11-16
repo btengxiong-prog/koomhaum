@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- ເພີ່ມ Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- ດึง Font Phetsarath ຈາກ Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Phetsarath:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --navy: #142b4a;
@@ -20,6 +22,7 @@
 
         * {
             box-sizing: border-box;
+            font-family: 'Phetsarath', 'Times New Roman', sans-serif;
         }
 
         html, body {
@@ -84,16 +87,17 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 13px;
+            padding: 12px 14px;
             border: 0;
             background: transparent;
             color: #cbd5e1;
             border-radius: 10px;
             text-align: left;
             font: inherit;
-            font-size: 13px;
+            font-size: 15px; /* ປັບຂະໜາດຟ້ອນເມນູໃຫ້ໃຫຍ່ຂຶ້ນ (ຈາກເດີມ 13px) */
+            font-weight: 500;
             cursor: pointer;
-            margin: 3px 0;
+            margin: 4px 0;
         }
 
         .nav button.active,
@@ -105,7 +109,7 @@
         .nav .ico {
             width: 22px;
             text-align: center;
-            font-size: 17px;
+            font-size: 19px; /* ປັບຂະໜາດໄອຄອນໃຫ້ສົມດຸນກັບຟ້ອນທີ່ໃຫຍ່ຂຶ້ນ */
         }
 
         .sidefoot {
