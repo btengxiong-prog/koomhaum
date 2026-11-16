@@ -512,7 +512,7 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <!-- ປຸ່ມໜ້າບັນທຶກກໍລະນີ -->
-                    <button id="topSaveDeathBtn" form="deathForm" type="submit" class="hidden" style="background: #2563eb; color: #ffffff; border: none; border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); display: flex; align-items: center; gap: 6px; transition: 0.2s;">
+                    <button id="topSaveDeathBtn" form="deathForm" type="submit" class="hidden" style="font-family: inherit; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); display: flex; align-items: center; gap: 6px; transition: 0.2s;">
                         <span style="font-size: 16px;">💾</span> ບັນທຶກກໍລະນີ
                     </button>
                     
@@ -521,16 +521,16 @@
                         <select id="memberDeathSelect" onchange="renderMembers()" style="padding: 10px; border-radius: 8px; border: 1px solid var(--line); outline: none; background: #fff; font-family: inherit; cursor: pointer; font-size: 12px;">
                             <option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>
                         </select>
-                        <button onclick="batchPayMembers()" style="background: #0f9d8a; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 6px rgba(15,157,138,0.3); transition: 0.2s;">
+                        <button onclick="batchPayMembers()" style="font-family: inherit; background: #0f9d8a; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 6px rgba(15,157,138,0.3); transition: 0.2s;">
                             💰 ບັນທຶກຈ່າຍເງິນ
                         </button>
-                        <button onclick="editSelectedMember()" style="background: #f59e0b; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 6px rgba(245,158,11,0.3); transition: 0.2s;">
+                        <button onclick="editSelectedMember()" style="font-family: inherit; background: #f59e0b; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 6px rgba(245,158,11,0.3); transition: 0.2s;">
                             ✏️ ແກ້ໄຂ
                         </button>
-                        <button onclick="delSelectedMembers()" style="background: #dc4b55; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 6px rgba(220,75,85,0.3); transition: 0.2s;">
+                        <button onclick="delSelectedMembers()" style="font-family: inherit; background: #dc4b55; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 6px rgba(220,75,85,0.3); transition: 0.2s;">
                             🗑️ ລືບຂໍ້ມູນ
                         </button>
-                        <button onclick="openMember()" style="background: #2563eb; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 6px rgba(37,99,235,0.3); transition: 0.2s;">
+                        <button onclick="openMember()" style="font-family: inherit; background: #2563eb; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 6px rgba(37,99,235,0.3); transition: 0.2s;">
                             ＋ ເພີ່ມສະມາຊິກ
                         </button>
                     </div>
@@ -1486,7 +1486,7 @@
         function renderDeaths() {
             document.getElementById('deathRows').innerHTML = db.deaths.map(d => `
                 <tr>
-                    <td>${esc(d.date)}</td>
+                    <td>${esc(d.date ? d.date.split('-').reverse().join('/') : '')}</td>
                     <td>${esc(d.name)}</td>
                     <td>${esc(member(d.memberId)?.name || '—')}</td>
                     <td>${money(d.rate)}</td>
@@ -1773,7 +1773,7 @@
             let de = pDeathEl.value;
             // ໃຊ້ (db.deaths || []) ເພື່ອປ້ອງກັນ Error ເວລາ Array ເປົ່າຫວ່າງ
             pDeathEl.innerHTML = '<option value="">ບໍ່ລະບຸ / ອື່ນໆ</option>' + (db.deaths || []).map(d => 
-                `<option value="${d.id}">${esc(d.date)} - ${esc(d.name)}</option>`
+                `<option value="${d.id}">${esc(d.date ? d.date.split('-').reverse().join('/') : '')} - ${esc(d.name)}</option>`
             ).join('');
             pDeathEl.value = de;
 
@@ -1782,7 +1782,7 @@
                 let mde = mDeathEl.value;
                 // ໃຊ້ (db.deaths || []) ເຊັ່ນດຽວກັນ
                 mDeathEl.innerHTML = '<option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>' + (db.deaths || []).map(d => 
-                    `<option value="${d.id}">${esc(d.date)} - ${esc(d.name)}</option>`
+                    `<option value="${d.id}">${esc(d.date ? d.date.split('-').reverse().join('/') : '')} - ${esc(d.name)}</option>`
                 ).join('');
                 mDeathEl.value = mde;
             }
