@@ -784,22 +784,23 @@
                     </div>
                     <div class="panel">
                         <div class="tablewrap">
-                            <table>
+                            <table style="min-width: 850px;">
                                 <thead>
                                     <tr>
                                         <th style="width: 50px;">ລ/ດ</th>
                                         <th>ວັນທີເສຍຊີວິດ</th>
                                         <th>ຊື່ຜູ້ເສຍຊີວິດ</th>
                                         <th>ຄອບຄົວຜູ້ຮັບ</th>
-                                        <th style="text-align: right;">ຍອດເກັບໄດ້ຈິງ (ກີບ)</th>
-                                        <th style="text-align: center;">ສະຖານະການມອບ</th>
+                                        <th>ລາຍການມອບ</th>
+                                        <th style="text-align: right;">ຈຳນວນເງິນມອບ (ກີບ)</th>
+                                        <th style="text-align: center;">ສະຖານະ</th>
                                         <th style="text-align: center;">ຈັດການ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="payoutRows"></tbody>
                                 <tfoot>
                                     <tr style="background-color: #f8fafc; font-size: 14px;">
-                                        <td colspan="4" style="text-align: right; padding-right: 20px;"><b>ລວມຍອດເງິນມອບທັງໝົດ:</b></td>
+                                        <td colspan="5" style="text-align: right; padding-right: 20px;"><b>ລວມຍອດເງິນມອບທັງໝົດ:</b></td>
                                         <td style="text-align: right; color: var(--teal); font-weight: 800;"><span id="totalPayoutAmount">0</span></td>
                                         <td colspan="2"></td>
                                     </tr>
@@ -1703,53 +1704,63 @@
         }
 
         function renderPayouts() {
-            let count = 1;
-            let grandTotalCollected = 0;
             let isAdmin = localStorage.getItem('isAdmin') === 'true';
+            let rowsHtml = [];
+            let grandTotalPaid = 0;
 
-            let html = db.deaths.map((d) => {
-                let collectedAmount = db.payments
-                    .filter(p => p.deathId === d.id && p.status === 'confirmed')
-                    .reduce((sum, p) => sum + p.amount, 0);
-                
-                grandTotalCollected += collectedAmount;
-
-                // ₭ ຜົນລວມເງິນທີ່ມອບໄປແລ້ວທຸກງວດ
+            db.deaths.forEach(d => {
                 d.payouts = d.payouts || [];
-                let totalPaidOut = d.payouts.reduce((sum, po) => sum + po.amount, 0);
-                let remaining = collectedAmount - totalPaidOut;
 
-                let statusBadge = '';
-                if (totalPaidOut >= collectedAmount && collectedAmount > 0) {
-                    statusBadge = `<span class="tag">🟢 ມອບຄົບແລ້ວ (${money(totalPaidOut)})</span>`;
-                } else if (totalPaidOut > 0) {
-                    statusBadge = `<span class="tag pending" style="background:#fef3c7; color:#b45309;">🟡 ມອບແລ້ວ ${money(totalPaidOut)} (ຄ້າງ ${money(remaining)})</span>`;
+                if (d.payouts.length === 0) {
+                    rowsHtml.push({
+                        deathId: d.id,
+                        date: d.date,
+                        name: d.name,
+                        receiver: member(d.memberId)?.name || '—',
+                        installmentLabel: 'ຍັງບໍ່ທັນມອບ',
+                        amount: 0,
+                        statusHtml: `<span class="tag bad">🔴 ຍັງບໍ່ທັນມອບ</span>`
+                    });
                 } else {
-                    statusBadge = `<span class="tag bad">🔴 ຍັງບໍ່ທັນມອບ</span>`;
+                    d.payouts.forEach((po, idx) => {
+                        grandTotalPaid += po.amount;
+                        rowsHtml.push({
+                            deathId: d.id,
+                            date: d.date,
+                            name: d.name,
+                            receiver: member(d.memberId)?.name || '—',
+                            installmentLabel: `ຄັ້ງທີ່ ${idx + 1}` + (po.note ? ` (${po.note})` : ''),
+                            amount: po.amount,
+                            statusHtml: `<span class="tag">🟢 ມອບແລ້ວ (${po.date ? po.date.split('-').reverse().join('/') : ''})</span>`
+                        });
+                    });
                 }
+            });
 
+            let html = rowsHtml.map((row, index) => {
                 let actionBtn = isAdmin ? `
-                    <button class="mini" style="background: #2563eb; color: white; font-weight: bold; padding: 6px 12px; border-radius: 6px;" onclick="openPayoutModal('${d.id}')">
+                    <button class="mini" style="background: #2563eb; color: white; font-weight: bold; padding: 6px 12px; border-radius: 6px;" onclick="openPayoutModal('${row.deathId}')">
                         📋 ຈັດການການມອບເງິນ
                     </button>
                 ` : '<span class="muted">-</span>';
 
                 return `
                     <tr>
-                        <td>${count++}</td>
-                        <td>${esc(d.date ? d.date.split('-').reverse().join('/') : '')}</td>
-                        <td><b>${esc(d.name)}</b></td>
-                        <td>${esc(member(d.memberId)?.name || '—')}</td>
-                        <td style="text-align: right; color: var(--teal); font-weight: bold;">${money(collectedAmount)}</td>
-                        <td style="text-align: center;">${statusBadge}</td>
+                        <td>${index + 1}</td>
+                        <td>${esc(row.date ? row.date.split('-').reverse().join('/') : '')}</td>
+                        <td><b>${esc(row.name)}</b></td>
+                        <td>${esc(row.receiver)}</td>
+                        <td>${esc(row.installmentLabel)}</td>
+                        <td style="text-align: right; color: var(--teal); font-weight: bold;">${money(row.amount)}</td>
+                        <td style="text-align: center;">${row.statusHtml}</td>
                         <td style="text-align: center;">${actionBtn}</td>
                     </tr>
                 `;
-            }).join('') || '<tr><td colspan="7" class="empty">ຍັງບໍ່ມີກໍລະນີເສຍຊີວິດ</td></tr>';
+            }).join('') || '<tr><td colspan="8" class="empty">ຍັງບໍ່ມີກໍລະນີເສຍຊີວິດ</td></tr>';
 
             document.getElementById('payoutRows').innerHTML = html;
             let totalEl = document.getElementById('totalPayoutAmount');
-            if (totalEl) totalEl.textContent = money(grandTotalCollected);
+            if (totalEl) totalEl.textContent = money(grandTotalPaid);
         }
 
         function openPayoutModal(deathId) {
