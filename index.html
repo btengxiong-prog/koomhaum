@@ -563,6 +563,18 @@
                         </button>
                     </div>
 
+                    <!-- ກຸ່ມເຄື່ອງມືກອງຂໍ້ມູນໜ້າຮັບເງິນ -->
+                    <div id="topPaymentFilters" class="hidden" style="display: flex; align-items:center; gap: 10px;">
+                        <select id="paymentDeathSelect" onchange="renderPayments()" style="padding: 9px; border-radius: 8px; border: 1px solid var(--line); outline: none; background: #fff; font-family: inherit; cursor: pointer; font-size: 12px; max-width: 180px;">
+                            <option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>
+                        </select>
+                        <select id="paymentStatusSelect" onchange="renderPayments()" style="padding: 9px; border-radius: 8px; border: 1px solid var(--line); outline: none; background: #fff; font-family: inherit; cursor: pointer; font-size: 12px;">
+                            <option value="all">ສະແດງທັງໝົດ</option>
+                            <option value="paid">🟢 ຊຳລະແລ້ວ</option>
+                            <option value="unpaid">🔴 ຍັງບໍ່ທັນຊຳລະ</option>
+                        </select>
+                    </div>
+
                     <!-- ປຸ່ມລຶບລາຍການໜ້າຮັບເງິນ (ຈະສະແດງສະເພາະຕອນຢູ່ໜ້າຮັບເງິນ) -->
                     <button id="topDeletePaymentsBtn" type="button" class="hidden" onclick="delSelectedPayments()" style="font-family: inherit; background: #dc4b55; color: white; border: none; border-radius: 8px; padding: 9px 15px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 3px 6px rgba(220,75,85,0.2); transition: 0.2s;">
                         🗑️ ລຶບລາຍການທີ່ເລືອກ
@@ -1136,6 +1148,15 @@
                 }
             }
             
+            let topPaymentFilters = document.getElementById('topPaymentFilters');
+            if (topPaymentFilters) {
+                if (page === 'payments') {
+                    topPaymentFilters.classList.remove('hidden'); // ສະແດງໃຫ້ທຸກຄົນເຫັນໄດ້
+                } else {
+                    topPaymentFilters.classList.add('hidden');
+                }
+            }
+            
             renderAll();
         }
 
@@ -1564,37 +1585,78 @@
         }
 
         function renderPayments() {
-            document.getElementById('paymentRows').innerHTML = db.payments.map((p, index) => {
-                let formattedDate = p.date ? p.date.split('-').reverse().join('/') : '';
-                return `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${esc(formattedDate)}</td>
-                    <td>${esc(p.id)}</td>
-                    <td>${esc(member(p.memberId)?.name || '—')}</td>
-                    <td><b>${money(p.amount)}</b></td>
-                    <td>${esc(p.method)}</td>
-                    <td>
-                        <span class="tag ${p.status === 'pending' ? 'pending' : ''}">
-                            ${p.status === 'pending' ? 'ລໍຖ້າກວດ' : 'ຢືນຢັນແລ້ວ'}
-                        </span>
-                    </td>
-                    <td style="text-align:center; ${localStorage.getItem('isAdmin') === 'true' ? '' : 'display:none;'}">
-                        ${localStorage.getItem('isAdmin') === 'true' ? `
-                        <div class="actions" style="justify-content: center; align-items: center;">
-                            ${p.status === 'pending' ? `<button class="mini" onclick="verify('${p.id}')">ຢືນຢັນ</button>` : ''}
-                            <input type="checkbox" class="chk-payment" value="${esc(p.id)}" style="width:16px;height:16px;cursor:pointer;">
-                        </div>` : ''}
-                    </td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="8" class="empty">ຍັງບໍ່ມີລາຍການ</td></tr>';
-
+            let deathId = document.getElementById('paymentDeathSelect')?.value;
+            let statusFilter = document.getElementById('paymentStatusSelect')?.value || 'all'; 
+            
+            let html = '';
+            let count = 1;
+            let isAdmin = localStorage.getItem('isAdmin') === 'true';
+            
+            if (statusFilter === 'unpaid') {
+                // ຖ້າເລືອກ "ຍັງບໍ່ທັນຊຳລະ" ຕ້ອງບັງຄັບໃຫ້ເລືອກຊື່ຜູ້ເສຍຊີວິດກ່ອນ
+                if (!deathId) {
+                    html = '<tr><td colspan="8" class="empty" style="padding: 40px; color: #dc4b55;">⚠️ ກະລຸນາເລືອກ <b>"ຊື່ຜູ້ເສຍຊີວິດ"</b> ຈາກກ່ອງດ້ານເທິງກ່ອນ<br>ເພື່ອເບິ່ງລາຍຊື່ຄອບຄົວທີ່ຍັງບໍ່ທັນຊຳລະເງິນ</td></tr>';
+                } else {
+                    // ຊອກຫາຄົນທີ່ຈ່າຍແລ້ວ
+                    let paidMemberIds = db.payments.filter(p => p.deathId === deathId && p.status === 'confirmed').map(p => p.memberId);
+                    // ກັ່ນຕອງເອົາສະເພາະຄົນທີ່ບໍ່ມີຊື່ໃນບັນຊີການຈ່າຍ
+                    let unpaidMembers = db.members.filter(m => !paidMemberIds.includes(m.id));
+                    
+                    html = unpaidMembers.map(m => `
+                    <tr style="background-color: #fffafb;">
+                        <td>${count++}</td>
+                        <td class="muted">-</td>
+                        <td class="muted">-</td>
+                        <td><b>${esc(m.name)}</b> <small class="muted">(${esc(m.id)})</small></td>
+                        <td class="muted">0</td>
+                        <td class="muted">-</td>
+                        <td>
+                            <span class="tag bad">🔴 ຍັງບໍ່ຈ່າຍ</span>
+                        </td>
+                        <td style="text-align:center; ${isAdmin ? '' : 'display:none;'}">
+                            ${isAdmin ? `<button class="mini" style="background:#0f9d8a; color:white; font-weight:bold;" onclick="quickPay('${m.id}', '${deathId}')">💰 ຮັບເງິນ</button>` : ''}
+                        </td>
+                    </tr>`).join('') || '<tr><td colspan="8" class="empty">🎉 ທຸກຄອບຄົວຊຳລະເງິນສຳເລັດແລ້ວ ສຳລັບກໍລະນີນີ້</td></tr>';
+                }
+            } else {
+                // ສຳລັບກໍລະນີ "ສະແດງທັງໝົດ" ແລະ "ຊຳລະແລ້ວ"
+                let filtered = db.payments;
+                if (deathId) filtered = filtered.filter(p => p.deathId === deathId);
+                if (statusFilter === 'paid') filtered = filtered.filter(p => p.status === 'confirmed');
+                
+                html = filtered.map((p) => {
+                    let formattedDate = p.date ? p.date.split('-').reverse().join('/') : '';
+                    return `
+                    <tr>
+                        <td>${count++}</td>
+                        <td>${esc(formattedDate)}</td>
+                        <td>${esc(p.id)}</td>
+                        <td>${esc(member(p.memberId)?.name || '—')}</td>
+                        <td><b>${money(p.amount)}</b></td>
+                        <td>${esc(p.method)}</td>
+                        <td>
+                            <span class="tag ${p.status === 'pending' ? 'pending' : ''}">
+                                ${p.status === 'pending' ? 'ລໍຖ້າກວດ' : 'ຢືນຢັນແລ້ວ'}
+                            </span>
+                        </td>
+                        <td style="text-align:center; ${isAdmin ? '' : 'display:none;'}">
+                            ${isAdmin ? `
+                            <div class="actions" style="justify-content: center; align-items: center;">
+                                ${p.status === 'pending' ? `<button class="mini" onclick="verify('${p.id}')">ຢືນຢັນ</button>` : ''}
+                                <input type="checkbox" class="chk-payment" value="${esc(p.id)}" style="width:16px;height:16px;cursor:pointer;">
+                            </div>` : ''}
+                        </td>
+                    </tr>`;
+                }).join('') || '<tr><td colspan="8" class="empty">ຍັງບໍ່ມີລາຍການ</td></tr>';
+            }
+            
+            document.getElementById('paymentRows').innerHTML = html;
+            
             let checkAll = document.getElementById('checkAllPayments');
             if (checkAll) checkAll.checked = false;
             
-            // ເຊື່ອງຫົວ (th) ຂອງຕາຕະລາງຮັບເງິນ
             let thCheckPay = document.querySelector('#payments thead th:last-child');
-            if (thCheckPay) thCheckPay.style.display = localStorage.getItem('isAdmin') === 'true' ? '' : 'none';
+            if (thCheckPay) thCheckPay.style.display = isAdmin ? '' : 'none';
         }
 
         function verify(id) {
@@ -1738,11 +1800,20 @@
             let mDeathEl = document.getElementById('memberDeathSelect');
             if(mDeathEl) {
                 let mde = mDeathEl.value;
-                // ໃຊ້ (db.deaths || []) ເຊັ່ນດຽວກັນ
                 mDeathEl.innerHTML = '<option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>' + (db.deaths || []).map(d => 
                     `<option value="${d.id}">${esc(d.date ? d.date.split('-').reverse().join('/') : '')} - ${esc(d.name)}</option>`
                 ).join('');
                 mDeathEl.value = mde;
+            }
+            
+            // ໂຫຼດລາຍຊື່ຜູ້ເສຍຊີວິດລົງໃນໜ້າຮັບເງິນ
+            let pDeathEl = document.getElementById('paymentDeathSelect');
+            if(pDeathEl) {
+                let pde = pDeathEl.value;
+                pDeathEl.innerHTML = '<option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>' + (db.deaths || []).map(d => 
+                    `<option value="${d.id}">${esc(d.date ? d.date.split('-').reverse().join('/') : '')} - ${esc(d.name)}</option>`
+                ).join('');
+                pDeathEl.value = pde;
             }
             
             renderMembers();
