@@ -125,8 +125,14 @@
         .main {
             flex: 1;
             min-width: 0;
-            height: 100vh; /* ກຳນົດຄວາມສູງໃຫ້ເຕັມຈໍ */
-            overflow-y: auto; /* ເປີດໃຫ້ມີແຖບເລື່ອນຂຶ້ນລົງໄດ້ (Scrollbar) ສະເພາະສ່ວນເນື້ອຫາ */
+            height: 100vh;
+            overflow-y: auto;
+            scrollbar-width: none; /* ເຊື່ອງ Scrollbar ນອກສຳລັບ Firefox */
+        }
+
+        /* ເຊື່ອງ Scrollbar ນອກສຳລັບ Chrome, Safari ແລະ Edge (ແຕ່ຍັງໃຊ້ເມົ້າສ໌ກິ້ງເລື່ອນລົງໄດ້ປົກກະຕິ) */
+        .main::-webkit-scrollbar {
+            display: none;
         }
 
         .top {
