@@ -2410,9 +2410,14 @@
             r.readAsText(f);
         }
 
-        // --- ລະບົບ Login ຜູ້ດູແລ ---
-        function checkAuth() {
-            let isAdmin = localStorage.getItem('isAdmin') === 'true';
+        // --- ລະບົບ Login ຜູ້ດູແລ (Supabase Auth) ---
+        async function checkAuth() {
+            let isAdmin = false;
+            if (supabaseClient) {
+                const { data } = await supabaseClient.auth.getSession();
+                isAdmin = data.session !== null;
+            }
+            localStorage.setItem('isAdmin', isAdmin);
             
             if (isAdmin) {
                 document.body.classList.remove('view-only');
@@ -2423,59 +2428,61 @@
                 document.getElementById('authAdmin').classList.add('hidden');
                 document.getElementById('authGuest').classList.remove('hidden');
                 
-                // ຖ້າບໍ່ມີສິດ ແລ້ວຫຼົງເຂົ້າໄປໜ້າສຳຮອງຂໍ້ມູນ (Backup) ໃຫ້ດີດກັບມາໜ້າຫຼັກ
                 if (!document.getElementById('backup').classList.contains('hidden')) {
                     go('dashboard');
-                    return; // ຢຸດການເຮັດວຽກ ເພາະ go() ຈະຈັດການຕໍ່ເອງ
+                    return;
                 }
             }
 
-            // ໂຫຼດໜ້າປັດຈຸບັນຄືນໃໝ່ ເພື່ອໃຫ້ປຸ່ມເຄື່ອງມືຕ່າງໆຂອງ Admin ສະແດງ/ເຊື່ອງ ທັນທີໂດຍບໍ່ຕ້ອງ Refresh Browser
             let activeBtn = document.querySelector('.nav button.active');
             if (activeBtn) {
-                let currentPage = activeBtn.dataset.page;
-                go(currentPage);
+                go(activeBtn.dataset.page);
             }
         }
 
-        function loginAdmin() {
+        async function loginAdmin() {
             Swal.fire({
                 title: 'ເຂົ້າສູ່ລະບົບຜູ້ດູແລ',
-                input: 'password',
-                inputPlaceholder: 'ປ້ອນລະຫັດຜ່ານ...',
+                html:
+                    '<input id="swal-email" class="swal2-input" placeholder="ອີເມວ (Email)">' +
+                    '<input id="swal-password" type="password" class="swal2-input" placeholder="ລະຫັດຜ່ານ (Password)">',
+                focusConfirm: false,
                 showCancelButton: true,
                 confirmButtonText: 'ເຂົ້າສູ່ລະບົບ',
                 cancelButtonText: 'ຍົກເລີກ',
                 confirmButtonColor: '#2563eb',
-            }).then((result) => {
+                preConfirm: () => {
+                    const email = document.getElementById('swal-email').value;
+                    const password = document.getElementById('swal-password').value;
+                    if (!email || !password) Swal.showValidationMessage('ກະລຸນາປ້ອນອີເມວ ແລະ ລະຫັດຜ່ານ');
+                    return { email, password };
+                }
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    // ລະຫັດຜ່ານເລີ່ມຕົ້ນຄື: admin123 (ສາມາດປ່ຽນເປັນອັນອື່ນໄດ້ຕາມຕ້ອງການ)
-                    if (result.value === 'admin123') {
-                        localStorage.setItem('isAdmin', 'true');
-                        checkAuth();
-                        Swal.fire('ສຳເລັດ', 'ເຂົ້າສູ່ລະບົບຜູ້ດູແລຮຽບຮ້ອຍແລ້ວ', 'success');
+                    Swal.fire({ title: 'ກຳລັງຢືນຢັນ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: result.value.email,
+                        password: result.value.password,
+                    });
+                    
+                    if (error) {
+                        Swal.fire('ຜິດພາດ', 'ອີເມວ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!', 'error');
                     } else {
-                        Swal.fire('ຜິດພາດ', 'ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!', 'error');
+                        await checkAuth();
+                        Swal.fire('ສຳເລັດ', 'ເຂົ້າສູ່ລະບົບຜູ້ດູແລຮຽບຮ້ອຍແລ້ວ', 'success');
                     }
                 }
             });
         }
 
-        function logoutAdmin() {
-            localStorage.removeItem('isAdmin');
-            checkAuth(); // ຟັງຊັນນີ້ຈະຈັດການເຊື່ອງເຄື່ອງມື Admin ທັນທີ
-            
-            Swal.fire({
-                title: 'ສຳເລັດ',
-                text: 'ອອກຈາກລະບົບຜູ້ດູແລແລ້ວ',
-                icon: 'info',
-                timer: 1500,
-                showConfirmButton: false
-            });
+        async function logoutAdmin() {
+            if (supabaseClient) await supabaseClient.auth.signOut();
+            await checkAuth(); 
+            Swal.fire({ title: 'ສຳເລັດ', text: 'ອອກຈາກລະບົບແລ້ວ', icon: 'info', timer: 1500, showConfirmButton: false });
         }
 
         // Initialize on load
-        checkAuth(); // ກວດສອບສິດທິທຸກຄັ້ງທີ່ໂຫຼດໜ້າເວັບ
+        checkAuth();
         
         // ເພີ່ມການກວດສອບກ່ອນວ່າມີ Element ນັ້ນຢູ່ຈິງບໍ່ ເພື່ອປ້ອງກັນ Error
         if (document.getElementById('dDate')) document.getElementById('dDate').value = today();
