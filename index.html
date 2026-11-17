@@ -2410,14 +2410,9 @@
             r.readAsText(f);
         }
 
-        // --- ລະບົບ Login ຜູ້ດູແລ (Supabase Auth) ---
-        async function checkAuth() {
-            let isAdmin = false;
-            if (supabaseClient) {
-                const { data } = await supabaseClient.auth.getSession();
-                isAdmin = data.session !== null;
-            }
-            localStorage.setItem('isAdmin', isAdmin);
+        // --- ລະບົບ Login ຜູ້ດູແລ (ແບບລະຫັດຜ່ານດຽວ) ---
+        function checkAuth() {
+            let isAdmin = localStorage.getItem('isAdmin') === 'true';
             
             if (isAdmin) {
                 document.body.classList.remove('view-only');
@@ -2440,45 +2435,40 @@
             }
         }
 
-        async function loginAdmin() {
+        function loginAdmin() {
             Swal.fire({
                 title: 'ເຂົ້າສູ່ລະບົບຜູ້ດູແລ',
-                html:
-                    '<input id="swal-email" class="swal2-input" placeholder="ອີເມວ (Email)">' +
-                    '<input id="swal-password" type="password" class="swal2-input" placeholder="ລະຫັດຜ່ານ (Password)">',
-                focusConfirm: false,
+                input: 'password',
+                inputPlaceholder: 'ປ້ອນລະຫັດຜ່ານ...',
                 showCancelButton: true,
                 confirmButtonText: 'ເຂົ້າສູ່ລະບົບ',
                 cancelButtonText: 'ຍົກເລີກ',
                 confirmButtonColor: '#2563eb',
-                preConfirm: () => {
-                    const email = document.getElementById('swal-email').value;
-                    const password = document.getElementById('swal-password').value;
-                    if (!email || !password) Swal.showValidationMessage('ກະລຸນາປ້ອນອີເມວ ແລະ ລະຫັດຜ່ານ');
-                    return { email, password };
-                }
-            }).then(async (result) => {
+            }).then((result) => {
                 if (result.isConfirmed) {
-                    Swal.fire({ title: 'ກຳລັງຢືນຢັນ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-                    const { data, error } = await supabaseClient.auth.signInWithPassword({
-                        email: result.value.email,
-                        password: result.value.password,
-                    });
-                    
-                    if (error) {
-                        Swal.fire('ຜິດພາດ', 'ອີເມວ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!', 'error');
-                    } else {
-                        await checkAuth();
+                    // 👈 ລະຫັດຜ່ານ Admin (ທ່ານສາມາດປ່ຽນຄຳວ່າ admin123 ເປັນລະຫັດທີ່ຕ້ອງການໄດ້)
+                    if (result.value === 'admin123') {
+                        localStorage.setItem('isAdmin', 'true');
+                        checkAuth();
                         Swal.fire('ສຳເລັດ', 'ເຂົ້າສູ່ລະບົບຜູ້ດູແລຮຽບຮ້ອຍແລ້ວ', 'success');
+                    } else {
+                        Swal.fire('ຜິດພາດ', 'ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!', 'error');
                     }
                 }
             });
         }
 
-        async function logoutAdmin() {
-            if (supabaseClient) await supabaseClient.auth.signOut();
-            await checkAuth(); 
-            Swal.fire({ title: 'ສຳເລັດ', text: 'ອອກຈາກລະບົບແລ້ວ', icon: 'info', timer: 1500, showConfirmButton: false });
+        function logoutAdmin() {
+            localStorage.removeItem('isAdmin');
+            checkAuth();
+            
+            Swal.fire({
+                title: 'ສຳເລັດ',
+                text: 'ອອກຈາກລະບົບຜູ້ດູແລແລ້ວ',
+                icon: 'info',
+                timer: 1500,
+                showConfirmButton: false
+            });
         }
 
         // Initialize on load
@@ -2495,7 +2485,30 @@
         go('dashboard'); 
         
         // ດຶງຂໍ້ມູນໃໝ່ຈາກ Cloud ມາອັບເດດຊ້ອນທັບອີກຄັ້ງໃນເບື້ອງຫຼັງ
-        loadCloudData(); 
+        loadCloudData();
+        // --- ລະບົບປ້ອງກັນການກົດ F12, ຄລິກຂວາ ແລະ Inspect ---
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault(); // ປິດການຄລິກຂວາ
+        });
+
+        document.addEventListener('keydown', function(e) {
+            // ປິດປຸ່ມ F12
+            if (e.key === 'F12' || e.keyCode === 123) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // ປິດປຸ່ມ Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U (View Source)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
+                e.preventDefault();
+                return false;
+            }
+            
+            if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
+                e.preventDefault();
+                return false;
+            }
+        });
     </script>
 </body>
 </html>
