@@ -1297,15 +1297,8 @@
                         amountHtml = `<span class="muted">-</span>`;
                         checkboxHtml = `<input type="checkbox" disabled title="ອອກຈາກສະມາຊິກແລ້ວ" style="width:16px;height:16px;cursor:not-allowed;">`;
                     } else {
-                    // ຖ້າຍັງບໍ່ຈ່າຍ ແລະ ຍັງເປັນສະມາຊິກຢູ່
-                    let isAdmin = localStorage.getItem('isAdmin') === 'true';
-                    if (isAdmin) {
-                        // Admin ເຫັນຍອດເງິນສີເທົາ ເພື່ອໃຫ້ຕິກຈ່າຍ
-                        amountHtml = `<span id="amt-${m.id}" style="color:var(--muted); font-weight:bold;">${money(currentRate)}</span>`;
-                    } else {
-                        // User ທົ່ວໄປ ບໍ່ໃຫ້ເຫັນຍອດເງິນຖ້າຍັງບໍ່ຈ່າຍ (ສະແດງເປັນຂີດແທນ)
-                        amountHtml = `<span class="muted">-</span>`;
-                    }
+                    // ຖ້າຍັງບໍ່ຈ່າຍ ແລະ ຍັງເປັນສະມາຊິກຢູ່: ຄ່າເລີ່ມຕົ້ນໃຫ້ສະແດງເປັນຂີດ (-) ໄວ້ກ່ອນທັງແອັດມິນແລະຜູ້ໃຊ້ທົ່ວໄປ
+                    amountHtml = `<span id="amt-${m.id}" class="muted">-</span>`;
                     checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" onchange="toggleAmount('${m.id}', ${currentRate}, this.checked)" style="width:16px;height:16px;cursor:pointer;">`;
                 }
                 } else {
@@ -1448,12 +1441,27 @@
             let checkboxes = document.querySelectorAll('.chk-member:not([disabled])');
             let selectedDeathId = document.getElementById('memberDeathSelect')?.value;
             
+            // ດຶງເອົາອັດຕາເກັບເງິນຂອງສົບປັດຈຸບັນ
+            let currentRate = 0;
+            if (selectedDeathId) {
+                let d = db.deaths.find(x => x.id === selectedDeathId);
+                currentRate = d ? d.rate : 0;
+            }
+
             checkboxes.forEach(cb => {
                 cb.checked = source.checked;
                 if (selectedDeathId) {
                     let el = document.getElementById('amt-' + cb.value);
                     if (el) {
-                        el.style.color = source.checked ? 'var(--teal)' : 'var(--muted)';
+                        if (source.checked) {
+                            el.innerHTML = money(currentRate);
+                            el.style.color = 'var(--teal)';
+                            el.style.fontWeight = 'bold';
+                        } else {
+                            el.innerHTML = '-';
+                            el.style.color = 'var(--muted)';
+                            el.style.fontWeight = 'normal';
+                        }
                     }
                 }
             });
@@ -1463,7 +1471,15 @@
         function toggleAmount(memberId, rate, isChecked) {
             let el = document.getElementById('amt-' + memberId);
             if (el) {
-                el.style.color = isChecked ? 'var(--teal)' : 'var(--muted)';
+                if (isChecked) {
+                    el.innerHTML = money(rate); // ເມື່ອຕິກໃຫ້ສະແດງຕົວເລກ
+                    el.style.color = 'var(--teal)';
+                    el.style.fontWeight = 'bold';
+                } else {
+                    el.innerHTML = '-'; // ເມື່ອເອົາຕິກອອກໃຫ້ກັບໄປເປັນຂີດ
+                    el.style.color = 'var(--muted)';
+                    el.style.fontWeight = 'normal';
+                }
                 calculateTableTotal(); // ຄຳນວນຍອດລວມຫຼັງຈາກຕິກແຕ່ລະອັນ
             }
         }
