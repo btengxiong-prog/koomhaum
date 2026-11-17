@@ -431,6 +431,12 @@
             padding: 25px;
         }
 
+        /* ບັງຄັບໃຫ້ເມນູຫຼັກໃນຈໍຄອມພິວເຕີເປັນລວງຕັ້ງສະເໝີ */
+        .nav {
+            display: flex;
+            flex-direction: column;
+        }
+
         @media(max-width:900px) {
             .side {
                 width: 210px;
@@ -446,7 +452,7 @@
         @media(max-width:650px) {
             html, body {
                 height: auto;
-                overflow: auto; /* ໃຫ້ມືຖືສາມາດເລື່ອນຂຶ້ນລົງໄດ້ປົກກະຕິ */
+                overflow: auto; /* ແກ້ບັນຫາຈໍຂາວ/ເລື່ອນບໍ່ໄດ້ໃນມືຖື */
             }
             .app {
                 display: block;
@@ -456,12 +462,59 @@
             .side {
                 width: 100%;
                 padding: 12px;
-                height: auto; /* ປ້ອງກັນບໍ່ໃຫ້ເມນູກິນພື້ນທີ່ເຕັມຈໍ 100vh */
+                height: auto;
                 position: relative;
             }
             .main {
                 height: auto;
                 overflow: visible;
+            }
+            .brand {
+                padding-bottom: 10px;
+                margin-bottom: 5px;
+            }
+            .nav {
+                display: flex;
+                flex-direction: row; /* ບັງຄັບເປັນລວງນອນສະເພາະມືຖື */
+                overflow-x: auto;
+                gap: 8px;
+                padding-bottom: 8px;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+            }
+            .nav::-webkit-scrollbar {
+                display: none;
+            }
+            .navlabel,
+            .sidefoot {
+                display: none;
+            }
+            .nav button {
+                min-width: max-content;
+                padding: 10px 16px;
+                margin: 0;
+            }
+            .top {
+                padding: 0 15px;
+                height: 60px;
+            }
+            .content {
+                padding: 16px;
+            }
+            .stats {
+                gap: 9px;
+            }
+            .stat {
+                padding: 13px;
+            }
+            .stat .num {
+                font-size: 19px;
+            }
+            .formgrid {
+                grid-template-columns: 1fr;
+            }
+            .formgrid .wide {
+                grid-column: auto;
             }
         }
             .brand {
