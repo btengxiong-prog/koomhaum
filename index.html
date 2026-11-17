@@ -1297,10 +1297,17 @@
                         amountHtml = `<span class="muted">-</span>`;
                         checkboxHtml = `<input type="checkbox" disabled title="ອອກຈາກສະມາຊິກແລ້ວ" style="width:16px;height:16px;cursor:not-allowed;">`;
                     } else {
-                        // ຖ້າຍັງບໍ່ຈ່າຍ ແລະ ຍັງເປັນສະມາຊິກຢູ່: ສະແດງອັດຕາເກັບເງິນສີເທົາ ແລະ ເປີດໃຫ້ຕິກໄດ້
+                    // ຖ້າຍັງບໍ່ຈ່າຍ ແລະ ຍັງເປັນສະມາຊິກຢູ່
+                    let isAdmin = localStorage.getItem('isAdmin') === 'true';
+                    if (isAdmin) {
+                        // Admin ເຫັນຍອດເງິນສີເທົາ ເພື່ອໃຫ້ຕິກຈ່າຍ
                         amountHtml = `<span id="amt-${m.id}" style="color:var(--muted); font-weight:bold;">${money(currentRate)}</span>`;
-                        checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" onchange="toggleAmount('${m.id}', ${currentRate}, this.checked)" style="width:16px;height:16px;cursor:pointer;">`;
+                    } else {
+                        // User ທົ່ວໄປ ບໍ່ໃຫ້ເຫັນຍອດເງິນຖ້າຍັງບໍ່ຈ່າຍ (ສະແດງເປັນຂີດແທນ)
+                        amountHtml = `<span class="muted">-</span>`;
                     }
+                    checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" onchange="toggleAmount('${m.id}', ${currentRate}, this.checked)" style="width:16px;height:16px;cursor:pointer;">`;
+                }
                 } else {
                     amountHtml = `<span class="muted">-</span>`;
                     checkboxHtml = isInactive ? 
