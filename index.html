@@ -526,53 +526,6 @@
                 grid-column: auto;
             }
         }
-            .brand {
-                padding-bottom: 10px;
-                margin-bottom: 5px; /* ເພີ່ມຊ່ອງຫວ່າງບໍ່ໃຫ້ເມນູຕິດກາໂລໂກ້ເກີນໄປ */
-            }
-            .nav {
-                display: flex;
-                overflow-x: auto;
-                gap: 8px; /* ຍະຫວ່າງປຸ່ມໃຫ້ກົດງ່າຍຂຶ້ນ ບໍ່ຫຼົງໄປຖືກປຸ່ມອື່ນ */
-                padding-bottom: 8px; /* ຍູ້ Scrollbar ລົງບໍ່ໃຫ້ທັບປຸ່ມ */
-                scrollbar-width: none; /* ເຊື່ອງ Scrollbar ສຳລັບ Firefox */
-                -webkit-overflow-scrolling: touch; /* ເຮັດໃຫ້ເລື່ອນຊ້າຍຂວາສະມູດຂຶ້ນໃນ iOS */
-            }
-            /* ເຊື່ອງ Scrollbar ສຳລັບ Chrome/Safari/Edge ແຕ່ຍັງເລື່ອນໄດ້ປົກກະຕິ */
-            .nav::-webkit-scrollbar {
-                display: none;
-            }
-            .navlabel,
-            .sidefoot {
-                display: none;
-            }
-            .nav button {
-                min-width: max-content;
-                padding: 10px 16px; /* ຂະຫຍາຍພື້ນທີ່ປຸ່ມໃຫ້ໃຫຍ່ຂຶ້ນ ສຳຜັດງ່າຍຂຶ້ນ */
-            }
-            .top {
-                padding: 0 15px;
-                height: 60px;
-            }
-            .content {
-                padding: 16px;
-            }
-            .stats {
-                gap: 9px;
-            }
-            .stat {
-                padding: 13px;
-            }
-            .stat .num {
-                font-size: 19px;
-            }
-            .formgrid {
-                grid-template-columns: 1fr;
-            }
-            .formgrid .wide {
-                grid-column: auto;
-            }
-        }
 
         /* ລະບົບສິດທິຜູ້ໃຊ້ (ເຊື່ອງເຄື່ອງມືຜູ້ດູແລອັດຕະໂນມັດ ຖ້າເປັນຢູເຊີທົ່ວໄປ) */
         body.view-only form,
@@ -793,8 +746,8 @@
                                     <input id="dRate" type="text" value="50,000" oninput="formatInput(this); calcDeath()" required>
                                 </div>
                                 <div class="field">
-                                    <label>ຈຳນວນຄອບຄົວທີ່ຕ້ອງຈ່າຍ</label>
-                                    <input id="dCount" type="number" min="1" value="33" oninput="calcDeath()">
+                                    <label>ຈຳນວນຄອບຄົວທີ່ຈ່າຍແລ້ວ (ດຶງຈາກການຕິກ)</label>
+                                    <input id="dCount" type="number" readonly style="background: #f8fafc; font-weight: bold; color: var(--blue);">
                                 </div>
                                 <div class="field">
                                     <label>ຍອດເງິນທີ່ຄາດຄະເນ</label>
@@ -1207,7 +1160,7 @@
             if (topSaveBtn) {
                 if (page === 'deaths' && isAdmin) {
                     topSaveBtn.classList.remove('hidden');
-                    document.getElementById('dCount').value = db.members.length;
+                    document.getElementById('dCount').value = 0; // ແກ້ໄຂແລ້ວ
                     calcDeath();
                 } else {
                     topSaveBtn.classList.add('hidden');
@@ -1297,10 +1250,10 @@
                         amountHtml = `<span class="muted">-</span>`;
                         checkboxHtml = `<input type="checkbox" disabled title="ອອກຈາກສະມາຊິກແລ້ວ" style="width:16px;height:16px;cursor:not-allowed;">`;
                     } else {
-                    // ຖ້າຍັງບໍ່ຈ່າຍ ແລະ ຍັງເປັນສະມາຊິກຢູ່: ຄ່າເລີ່ມຕົ້ນໃຫ້ສະແດງເປັນຂີດ (-) ໄວ້ກ່ອນທັງແອັດມິນແລະຜູ້ໃຊ້ທົ່ວໄປ
-                    amountHtml = `<span id="amt-${m.id}" class="muted">-</span>`;
-                    checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" onchange="toggleAmount('${m.id}', ${currentRate}, this.checked)" style="width:16px;height:16px;cursor:pointer;">`;
-                }
+                        // ຖ້າຍັງບໍ່ຈ່າຍ ແລະ ຍັງເປັນສະມາຊິກຢູ່: ຄ່າເລີ່ມຕົ້ນໃຫ້ສະແດງເປັນຂີດ (-) ໄວ້ກ່ອນທັງແອັດມິນແລະຜູ້ໃຊ້ທົ່ວໄປ
+                        amountHtml = `<span id="amt-${m.id}" class="muted">-</span>`;
+                        checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" onchange="toggleAmount('${m.id}', ${currentRate}, this.checked)" style="width:16px;height:16px;cursor:pointer;">`;
+                    }
                 } else {
                     amountHtml = `<span class="muted">-</span>`;
                     checkboxHtml = isInactive ? 
@@ -1338,8 +1291,6 @@
             
             calculateTableTotal();
         }
-
-        
 
         function delMember(id) {
             if (confirm('ຢືນຢັນລົບສະມາຊິກນີ້?')) {
@@ -1498,8 +1449,9 @@
                     let val = Number(text.replace(/,/g, '').replace(/-/g, '')) || 0;
                     
                     if (isAdmin) {
-                        // ສຳລັບ Admin: ບວກສະເພາະແຖວທີ່ມີການຕິກ Checkbox
-                        if (cb && cb.checked) {
+                        // ສຳລັບ Admin: ບວກສະເພາະແຖວທີ່ມີການຕິກ Checkbox ຫຼື ທີ່ສະແດງເປັນຕົວເລກ (ຈ່າຍແລ້ວ)
+                        // ແກ້ໄຂ: ບວກລາຍການທີ່ຈ່າຍແລ້ວ (disabled ແຕ່ມີຄ່າ) ຫຼື ກຳລັງຕິກຢູ່
+                        if ((cb && cb.checked) || (cb && cb.disabled && val > 0) || (!cb && val > 0)) {
                             total += val;
                         }
                     } else {
@@ -1629,7 +1581,7 @@
                 // ຄືນຄ່າຕ່າງໆໃຫ້ເປັນປົກກະຕິ
                 document.getElementById('dId').value = ''; 
                 document.getElementById('dDate').value = today();
-                document.getElementById('dCount').value = db.members.length;
+                document.getElementById('dCount').value = 0; // ແກ້ໄຂແລ້ວ
                 let btn = document.getElementById('topSaveDeathBtn');
                 if(btn) btn.innerHTML = '<span style="font-size: 16px;">💾</span> ບັນທຶກກໍລະນີ';
                 calcDeath();
@@ -1664,14 +1616,19 @@
 
         function renderDeaths() {
             let isAdmin = localStorage.getItem('isAdmin') === 'true'; // ກວດສອບສິດທິ Admin
-            document.getElementById('deathRows').innerHTML = db.deaths.map(d => `
+            document.getElementById('deathRows').innerHTML = db.deaths.map(d => {
+                // 🟢 ຄຳນວນຈຳນວນຄອບຄົວ ແລະ ຍອດເງິນຕົວຈິງ ຈາກການຕິກໃນໜ້າສະມາຊິກ
+                let actualPaidCount = db.payments.filter(p => p.deathId === d.id && p.status === 'confirmed').length;
+                let actualTotal = actualPaidCount * d.rate;
+
+                return `
                 <tr>
                     <td>${esc(d.date ? d.date.split('-').reverse().join('/') : '')}</td>
                     <td>${esc(d.name)}</td>
                     <td>${esc(member(d.memberId)?.name || '—')}</td>
                     <td>${money(d.rate)}</td>
-                    <td>${d.count}</td>
-                    <td><b>${money(d.total)}</b></td>
+                    <td style="color:var(--blue); font-weight:bold;">${actualPaidCount}</td>
+                    <td><b style="color:var(--teal)">${money(actualTotal)}</b></td>
                     <td>
                         <div class="actions">
                             <button class="mini" style="background:#0f9d8a; color:white;" onclick="viewDeathInfo('${d.id}')">📄 ລາຍລະອຽດ</button>
@@ -1682,7 +1639,7 @@
                         </div>
                     </td>
                 </tr>
-            `).join('') || '<tr><td colspan="7" class="empty">ຍັງບໍ່ມີລາຍການ</td></tr>';
+            `}).join('') || '<tr><td colspan="7" class="empty">ຍັງບໍ່ມີລາຍການ</td></tr>';
         }
 
         function editDeath(id) {
@@ -1698,7 +1655,11 @@
             
             document.getElementById('dRate').value = Number(d.rate).toLocaleString('en-US');
             document.getElementById('dDate').value = d.date || today();
-            document.getElementById('dCount').value = d.count || db.members.length;
+            
+            // 🟢 ນັບຈຳນວນຄົນທີ່ຕິກຈ່າຍແລ້ວຕົວຈິງ (confirmed) ມາໃສ່ໃນກ່ອງ
+            let actualPaidCount = db.payments.filter(p => p.deathId === id && p.status === 'confirmed').length;
+            document.getElementById('dCount').value = actualPaidCount;
+            
             document.getElementById('dNote').value = d.note || '';
 
             calcDeath(); // ຄຳນວນຍອດລວມໃໝ່
@@ -1718,6 +1679,10 @@
             let mem = member(d.memberId);
             let memberName = mem ? `${mem.name} (ລະຫັດ: ${mem.id})` : d.memberId;
             let formattedDate = d.date ? d.date.split('-').reverse().join('/') : '-';
+            
+            // 🟢 ຄຳນວນຈຳນວນຄອບຄົວ ແລະ ຍອດເງິນຕົວຈິງ ຈາກການຕິກໃນໜ້າສະມາຊິກ ສຳລັບສະແດງໃນປັອບອັບ
+            let actualPaidCount = db.payments.filter(p => p.deathId === d.id && p.status === 'confirmed').length;
+            let actualTotal = actualPaidCount * d.rate;
             
             // ປ່ຽນການລົງແຖວ (Enter) ໃນຊ່ອງໝາຍເຫດ ໃຫ້ເປັນ <br> ເພື່ອສະແດງຜົນໃນ HTML ໄດ້ຖືກຕ້ອງ
             let noteHtml = d.note ? esc(d.note).replace(/\n/g, '<br>') : '<span class="muted">ບໍ່ມີການບັນທຶກໝາຍເຫດ/ປະຫວັດ.</span>';
@@ -1745,11 +1710,11 @@
                             </tr>
                             <tr style="border-bottom: 1px dashed #cbd5e1;">
                                 <td style="padding: 8px 0; color: #64748b;"><b>ຈຳນວນຄອບຄົວທີ່ຈ່າຍ:</b></td>
-                                <td style="padding: 8px 0;">${d.count} ຄອບຄົວ</td>
+                                <td style="padding: 8px 0;">${actualPaidCount} ຄອບຄົວ</td>
                             </tr>
                             <tr style="border-bottom: 1px dashed #cbd5e1;">
-                                <td style="padding: 8px 0; color: #64748b;"><b>ຍອດເງິນຄາດຄະເນ:</b></td>
-                                <td style="padding: 8px 0; color: var(--teal); font-weight: bold; font-size: 16px;">${money(d.total)} ກີບ</td>
+                                <td style="padding: 8px 0; color: #64748b;"><b>ຍອດເງິນຕົວຈິງ:</b></td>
+                                <td style="padding: 8px 0; color: var(--teal); font-weight: bold; font-size: 16px;">${money(actualTotal)} ກີບ</td>
                             </tr>
                         </table>
 
@@ -2118,7 +2083,7 @@
                 title: `ຈັດການມອບເງິນ: ${d.name}`,
                 html: `
                     <div style="text-align: left; font-size: 13px; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--line);">
-                        <p style="margin: 0 0 5px 0;">💰 ຍອດເກັບໄດ້ທັງໝົດ: <b>${money(collectedAmount)} ກีບ</b></p>
+                        <p style="margin: 0 0 5px 0;">💰 ຍອດເກັບໄດ້ທັງໝົດ: <b>${money(collectedAmount)} ກີບ</b></p>
                         <p style="margin: 0 0 5px 0; color: #0f9d8a;">✅ ມອບໄປແລ້ວ: <b>${money(totalPaidOut)} ກີບ</b></p>
                         <p style="margin: 0; color: #dc4b55;">🔴 ຍັງຄ້າງມອບ: <b>${money(remaining)} ກີບ</b></p>
                     </div>
@@ -2158,7 +2123,7 @@
                     let note = document.getElementById('swalNote').value.trim();
 
                     if (amount <= 0) {
-                        Swal.showValidationMessage('ກະລຸນາປ້ອນຈຳນວນເງິນໃຫ້ถูกต้อง');
+                        Swal.showValidationMessage('ກະລຸນາປ້ອນຈຳນວນເງິນໃຫ້ຖືກຕ້ອງ');
                         return false;
                     }
                     return { amount, date, note };
@@ -2499,7 +2464,6 @@
         if (document.getElementById('dDate')) document.getElementById('dDate').value = today();
         if (document.getElementById('pDate')) document.getElementById('pDate').value = today();
         if (document.getElementById('eDate')) document.getElementById('eDate').value = today();
-        if (document.getElementById('dCount')) document.getElementById('dCount').value = db.members.length;
         
         if (typeof calcDeath === 'function') calcDeath();
         
