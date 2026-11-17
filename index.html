@@ -643,6 +643,9 @@
                     <!-- ກຸ່ມເຄື່ອງມືໜ້າສັງລວມຈ່າຍເງິນ (ຍ້າຍມາໄວ້ດ້ານເທິງ) -->
                     <div id="topPaymentSummaryFilters" class="hidden" style="display: flex; align-items:center; gap: 12px;">
                         <input class="search" id="paymentSummarySearch" placeholder="🔍 ຄົ້ນຫາຊື່ສະມາຊິກ, ລະຫັດ, ບ້ານ..." oninput="renderPayments()" style="width: 260px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 13.5px; font-weight: 600; background: #f8fafc; outline: none; transition: 0.2s;">
+                        <select id="paymentDeathSelect" onchange="renderPayments()" style="padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; outline: none; background: #f8fafc; font-family: inherit; cursor: pointer; font-size: 13.5px; font-weight: 600; color: #1e293b; transition: 0.2s; min-width: 180px;">
+                            <option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ --</option>
+                        </select>
                         <select id="paymentSummaryFilter" onchange="renderPayments()" style="padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; outline: none; background: #f8fafc; font-family: inherit; cursor: pointer; font-size: 13.5px; font-weight: 600; color: #1e293b; transition: 0.2s;">
                             <option value="all">ສະແດງທັງໝົດ</option>
                             <option value="completed">🟢 ຈ່າຍຄົບແລ້ວ</option>
@@ -1707,14 +1710,23 @@
         function renderPayments() {
             let q = (document.getElementById('paymentSummarySearch')?.value || '').toLowerCase();
             let statusFilter = document.getElementById('paymentSummaryFilter')?.value || 'all';
-            let totalDeathsCount = db.deaths.length;
+            let specificDeathId = document.getElementById('paymentDeathSelect')?.value || '';
+
+            // ຖ້າມີການເລືອກກໍລະນີສະເພາະ ໃຫ້ນັບຈຳນວນກໍລະນີອ້າງອີງເປັນ 1, ຖ້າບໍ່ເລືອກໃຫ້ນັບທັງໝົດ
+            let totalDeathsCount = specificDeathId ? 1 : db.deaths.length;
 
             // ສັງລວມຂໍ້ມູນການຈ່າຍເງິນຂອງແຕ່ລະສະມາຊິກ
             let summaryList = db.members.map(m => {
                 let memberPayments = db.payments.filter(p => p.memberId === m.id && p.status === 'confirmed');
+                
+                // ຖ້າເລືອກກໍລະນີສະເພາະ ກອງເອົາແຕ່ຍອດເງິນຂອງກໍລະນີນັ້ນ
+                if (specificDeathId) {
+                    memberPayments = memberPayments.filter(p => p.deathId === specificDeathId);
+                }
+
                 let totalPaidAmount = memberPayments.reduce((sum, p) => sum + p.amount, 0);
                 
-                // ນับຈຳນວນສົບທີ່ຈ່າຍແລ້ວ (ບໍ່ໃຫ້ນັບຊ້ຳໃນສົບເດີມ)
+                // ນັບຈຳນວນສົບທີ່ຈ່າຍແລ້ວ (ບໍ່ໃຫ້ນັບຊ້ຳໃນສົບເດີມ)
                 let paidDeathIds = [...new Set(memberPayments.map(p => p.deathId))];
                 let paidCount = paidDeathIds.length;
                 
