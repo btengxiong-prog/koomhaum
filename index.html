@@ -1605,6 +1605,7 @@
                     <td><b>${money(d.total)}</b></td>
                     <td>
                         <div class="actions">
+                            <button class="mini" style="background:#0f9d8a; color:white;" onclick="viewDeathInfo('${d.id}')">📄 ລາຍລະອຽດ</button>
                             <button class="mini" onclick="editDeath('${d.id}')">ແກ້ໄຂ</button>
                             <button class="mini del" onclick="delItem('deaths','${d.id}')">ລົບ</button>
                         </div>
@@ -1637,6 +1638,65 @@
 
             // ເລື່ອນໜ້າຈໍຂຶ້ນໄປຫາຟອມອັດຕະໂນມັດ
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function viewDeathInfo(id) {
+            let d = db.deaths.find(x => x.id === id);
+            if (!d) return;
+
+            let mem = member(d.memberId);
+            let memberName = mem ? `${mem.name} (ລະຫັດ: ${mem.id})` : d.memberId;
+            let formattedDate = d.date ? d.date.split('-').reverse().join('/') : '-';
+            
+            // ປ່ຽນການລົງແຖວ (Enter) ໃນຊ່ອງໝາຍເຫດ ໃຫ້ເປັນ <br> ເພື່ອສະແດງຜົນໃນ HTML ໄດ້ຖືກຕ້ອງ
+            let noteHtml = d.note ? esc(d.note).replace(/\n/g, '<br>') : '<span class="muted">ບໍ່ມີການບັນທຶກໝາຍເຫດ/ປະຫວັດ.</span>';
+
+            Swal.fire({
+                title: 'ປະຫວັດ ແລະ ລາຍລະອຽດກໍລະນີເສຍຊີວິດ',
+                html: `
+                    <div style="text-align: left; font-size: 14px; line-height: 1.6; color: #334155;">
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                            <tr style="border-bottom: 1px dashed #cbd5e1;">
+                                <td style="padding: 8px 0; width: 40%; color: #64748b;"><b>ຊື່ຜູ້ເສຍຊີວິດ:</b></td>
+                                <td style="padding: 8px 0; font-weight: bold; color: #0f172a;">${esc(d.name)}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px dashed #cbd5e1;">
+                                <td style="padding: 8px 0; color: #64748b;"><b>ວັນທີເກີດເຫດ:</b></td>
+                                <td style="padding: 8px 0; font-weight: bold;">${formattedDate}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px dashed #cbd5e1;">
+                                <td style="padding: 8px 0; color: #64748b;"><b>ຄອບຄົວສະມາຊິກ:</b></td>
+                                <td style="padding: 8px 0;">${esc(memberName)}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px dashed #cbd5e1;">
+                                <td style="padding: 8px 0; color: #64748b;"><b>ອັດຕາເກັບ/ຄອບຄົວ:</b></td>
+                                <td style="padding: 8px 0; color: var(--blue); font-weight: bold;">${money(d.rate)} ກີບ</td>
+                            </tr>
+                            <tr style="border-bottom: 1px dashed #cbd5e1;">
+                                <td style="padding: 8px 0; color: #64748b;"><b>ຈຳນວນຄອບຄົວທີ່ຈ່າຍ:</b></td>
+                                <td style="padding: 8px 0;">${d.count} ຄອບຄົວ</td>
+                            </tr>
+                            <tr style="border-bottom: 1px dashed #cbd5e1;">
+                                <td style="padding: 8px 0; color: #64748b;"><b>ຍອດເງິນຄາດຄະເນ:</b></td>
+                                <td style="padding: 8px 0; color: var(--teal); font-weight: bold; font-size: 16px;">${money(d.total)} ກີບ</td>
+                            </tr>
+                        </table>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 10px;">
+                            <div style="font-weight: bold; color: #475569; margin-bottom: 8px; border-bottom: 2px solid #cbd5e1; padding-bottom: 4px; display: inline-block;">
+                                📝 ປະຫວັດ/ແຈ້ງຂ່າວມໍລະນະກຳ:
+                            </div>
+                            <div style="font-family: 'Phetsarath', sans-serif; font-size: 13.5px; text-align: justify; word-wrap: break-word;">
+                                ${noteHtml}
+                            </div>
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                confirmButtonText: 'ປິດໜ້າຈໍ',
+                confirmButtonColor: '#2563eb',
+                showPrintButton: true // (ເປັນພຽງ Option ເສີມ, SweetAlert ປົກກະຕິບໍ່ມີປຸ່ມ Print, ຖ້າຢາກໄດ້ Print ແທ້ໆ ອາດຕ້ອງສ້າງໜ້າ Print ແຍກ, ແຕ່ສະແດງຜົນຊື່ໆ ແບບນີ້ກໍອ່ານງ່າຍຫຼາຍແລ້ວ)
+            });
         }
 
         let currentTrackDeathId = null;
