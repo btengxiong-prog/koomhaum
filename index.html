@@ -1621,7 +1621,10 @@
             document.getElementById('deathRows').innerHTML = db.deaths.map(d => {
                 // 🟢 ຄຳນວນຈຳນວນຄອບຄົວ ແລະ ຍອດເງິນຕົວຈິງ ຈາກການຕິກໃນໜ້າສະມາຊິກ
                 let actualPaidCount = db.payments.filter(p => p.deathId === d.id && p.status === 'confirmed').length;
-                let actualTotal = actualPaidCount * d.rate;
+                
+                // ປັບປຸງ: ດຶງຂໍ້ມູນເກົ່າມາສະແດງ ຖ້າຍັງບໍ່ມີການຕິກຈ່າຍເງິນໃນລະບົບໃໝ່
+                let finalCount = actualPaidCount > 0 ? actualPaidCount : (d.count || 0);
+                let finalTotal = actualPaidCount > 0 ? (actualPaidCount * d.rate) : (d.total || (finalCount * d.rate));
 
                 return `
                 <tr>
@@ -1629,8 +1632,8 @@
                     <td>${esc(d.name)}</td>
                     <td>${esc(member(d.memberId)?.name || '—')}</td>
                     <td>${money(d.rate)}</td>
-                    <td style="color:var(--blue); font-weight:bold;">${actualPaidCount}</td>
-                    <td><b style="color:var(--teal)">${money(actualTotal)}</b></td>
+                    <td style="color:var(--blue); font-weight:bold;">${finalCount}</td>
+                    <td><b style="color:var(--teal)">${money(finalTotal)}</b></td>
                     <td>
                         <div class="actions">
                             <button class="mini" style="background:#0f9d8a; color:white;" onclick="viewDeathInfo('${d.id}')">📄 ລາຍລະອຽດ</button>
@@ -1660,7 +1663,10 @@
             
             // 🟢 ນັບຈຳນວນຄົນທີ່ຕິກຈ່າຍແລ້ວຕົວຈິງ (confirmed) ມາໃສ່ໃນກ່ອງ
             let actualPaidCount = db.payments.filter(p => p.deathId === id && p.status === 'confirmed').length;
-            document.getElementById('dCount').value = actualPaidCount;
+            
+            // ປັບປຸງ: ຖ້າ actualPaidCount ຍັງເປັນ 0 (ຂໍ້ມູນເກົ່າ) ໃຫ້ດຶງເອົາ d.count ເກົ່າມາສະແດງແທນ
+            let finalCount = actualPaidCount > 0 ? actualPaidCount : (d.count || 0);
+            document.getElementById('dCount').value = finalCount;
             
             document.getElementById('dNote').value = d.note || '';
 
@@ -1684,7 +1690,10 @@
             
             // 🟢 ຄຳນວນຈຳນວນຄອບຄົວ ແລະ ຍອດເງິນຕົວຈິງ ຈາກການຕິກໃນໜ້າສະມາຊິກ ສຳລັບສະແດງໃນປັອບອັບ
             let actualPaidCount = db.payments.filter(p => p.deathId === d.id && p.status === 'confirmed').length;
-            let actualTotal = actualPaidCount * d.rate;
+            
+            // ປັບປຸງ: ດຶງຂໍ້ມູນເກົ່າມາສະແດງ ຖ້າຍັງບໍ່ມີການຕິກຈ່າຍເງິນໃນລະບົບໃໝ່
+            let finalCount = actualPaidCount > 0 ? actualPaidCount : (d.count || 0);
+            let finalTotal = actualPaidCount > 0 ? (actualPaidCount * d.rate) : (d.total || (finalCount * d.rate));
             
             // ປ່ຽນການລົງແຖວ (Enter) ໃນຊ່ອງໝາຍເຫດ ໃຫ້ເປັນ <br> ເພື່ອສະແດງຜົນໃນ HTML ໄດ້ຖືກຕ້ອງ
             let noteHtml = d.note ? esc(d.note).replace(/\n/g, '<br>') : '<span class="muted">ບໍ່ມີການບັນທຶກໝາຍເຫດ/ປະຫວັດ.</span>';
@@ -1712,11 +1721,11 @@
                             </tr>
                             <tr style="border-bottom: 1px dashed #cbd5e1;">
                                 <td style="padding: 8px 0; color: #64748b;"><b>ຈຳນວນຄອບຄົວທີ່ຈ່າຍ:</b></td>
-                                <td style="padding: 8px 0;">${actualPaidCount} ຄອບຄົວ</td>
+                                <td style="padding: 8px 0;">${finalCount} ຄອບຄົວ</td>
                             </tr>
                             <tr style="border-bottom: 1px dashed #cbd5e1;">
                                 <td style="padding: 8px 0; color: #64748b;"><b>ຍອດເງິນຕົວຈິງ:</b></td>
-                                <td style="padding: 8px 0; color: var(--teal); font-weight: bold; font-size: 16px;">${money(actualTotal)} ກີບ</td>
+                                <td style="padding: 8px 0; color: var(--teal); font-weight: bold; font-size: 16px;">${money(finalTotal)} ກີບ</td>
                             </tr>
                         </table>
 
