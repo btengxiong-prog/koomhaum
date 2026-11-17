@@ -1281,13 +1281,17 @@
                     let displayAmount = db.payments.filter(p => p.memberId === m.id && p.deathId === selectedDeathId && p.status === 'confirmed').reduce((s, p) => s + p.amount, 0);
                     let isPaid = displayAmount > 0;
 
-                    if (isInactive) {
-                        amountHtml = `<span class="muted">-</span>`;
-                        checkboxHtml = `<input type="checkbox" disabled title="ອອກຈາກສະມາຊິກແລ້ວ" style="width:16px;height:16px;cursor:not-allowed;">`;
-                    } else if (isPaid) {
+                    // ກວດສອບວ່າເຄີຍຈ່າຍແລ້ວ ຫຼື ບໍ່ ກ່ອນເປັນອັນດັບທຳອິດ
+                    if (isPaid) {
+                        // ຖ້າເຄີຍຈ່າຍແລ້ວ: ໃຫ້ສະແດງຈຳນວນເງິນສະເໝີ ບໍ່ວ່າປັດຈຸບັນຈະອອກແລ້ວ ຫຼື ຍັງຢູ່
                         amountHtml = `<span style="color:var(--teal); font-weight:bold;">${money(displayAmount)}</span>`;
                         checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" checked disabled title="ຈ່າຍແລ້ວ" style="width:16px;height:16px;cursor:not-allowed;">`;
+                    } else if (isInactive) {
+                        // ຖ້າຍັງບໍ່ຈ່າຍ ແລະ ອອກຈາກສະມາຊິກໄປແລ້ວ: ໃຫ້ເປັນຂີດ (-) ແລະ ລັອກບໍ່ໃຫ້ຕິກຈ່າຍໃໝ່
+                        amountHtml = `<span class="muted">-</span>`;
+                        checkboxHtml = `<input type="checkbox" disabled title="ອອກຈາກສະມາຊິກແລ້ວ" style="width:16px;height:16px;cursor:not-allowed;">`;
                     } else {
+                        // ຖ້າຍັງບໍ່ຈ່າຍ ແລະ ຍັງເປັນສະມາຊິກຢູ່: ສະແດງອັດຕາເກັບເງິນສີເທົາ ແລະ ເປີດໃຫ້ຕິກໄດ້
                         amountHtml = `<span id="amt-${m.id}" style="color:var(--muted); font-weight:bold;">${money(currentRate)}</span>`;
                         checkboxHtml = `<input type="checkbox" class="chk-member" value="${esc(m.id)}" onchange="toggleAmount('${m.id}', ${currentRate}, this.checked)" style="width:16px;height:16px;cursor:pointer;">`;
                     }
