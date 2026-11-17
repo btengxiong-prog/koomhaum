@@ -758,6 +758,7 @@
                 <section id="deaths" class="page hidden">
                     <div class="panel">
                         <form id="deathForm">
+                            <input type="hidden" id="dId"> <!-- ເພີ່ມຊ່ອງເກັບ ID ສຳລັບການແກ້ໄຂ -->
                             <div class="formgrid">
                                 <div class="field">
                                     <label>ຊື່ຜູ້ເສຍຊີວິດ</label>
@@ -1516,6 +1517,7 @@
         if (deathFormEl) {
             deathFormEl.onsubmit = e => {
                 e.preventDefault();
+                let editId = document.getElementById('dId').value; // ກວດເບິ່ງວ່າມີ ID ແກ້ໄຂແຝງຢູ່ບໍ່
                 let name = document.getElementById('dName').value.trim();
                 let memberInput = document.getElementById('dMember').value.trim();
                 let rate = Number(document.getElementById('dRate').value.replace(/,/g, '')) || 0;
@@ -1524,29 +1526,48 @@
                 let total = rate * count;
                 let note = document.getElementById('dNote').value.trim();
 
-                // ดึงເອົາສະເພາະ ID ສະມາຊິກ (ກໍລະນີເລືອກຈາກ Datalist ເຊັ່ນ "WF0001 - Name")
                 let memberId = memberInput.includes(' - ') ? memberInput.split(' - ')[0] : memberInput;
 
-                db.deaths.unshift({
-                    id: 'D' + Date.now(),
-                    name: name,
-                    memberId: memberId,
-                    rate: rate,
-                    count: count,
-                    total: total,
-                    note: note,
-                    date: date,
-                    payouts: []
-                });
+                if (editId) {
+                    // ຖ້າມີ editId ໝາຍຄວາມວ່າເປັນການອັບເດດຂໍ້ມູນເກົ່າ
+                    let index = db.deaths.findIndex(x => x.id === editId);
+                    if (index !== -1) {
+                        db.deaths[index].name = name;
+                        db.deaths[index].memberId = memberId;
+                        db.deaths[index].rate = rate;
+                        db.deaths[index].count = count;
+                        db.deaths[index].total = total;
+                        db.deaths[index].note = note;
+                        db.deaths[index].date = date;
+                    }
+                } else {
+                    // ຖ້າບໍ່ມີ editId ໝາຍຄວາມວ່າເປັນການເພີ່ມໃໝ່
+                    db.deaths.unshift({
+                        id: 'D' + Date.now(),
+                        name: name,
+                        memberId: memberId,
+                        rate: rate,
+                        count: count,
+                        total: total,
+                        note: note,
+                        date: date,
+                        payouts: [] // ຮັກສາໂຄງສ້າງການມອບເງິນໄວ້
+                    });
+                }
 
                 save();
                 deathFormEl.reset();
+                
+                // ຄືນຄ່າຕ່າງໆໃຫ້ເປັນປົກກະຕິ
+                document.getElementById('dId').value = ''; 
                 document.getElementById('dDate').value = today();
                 document.getElementById('dCount').value = db.members.length;
+                let btn = document.getElementById('topSaveDeathBtn');
+                if(btn) btn.innerHTML = '<span style="font-size: 16px;">💾</span> ບັນທຶກກໍລະນີ';
                 calcDeath();
 
                 if (typeof Swal !== 'undefined') {
-                    Swal.fire('ສຳເລັດ!', 'ບັນທຶກກໍລະນີເສຍຊີວິດຮຽບຮ້ອຍແລ້ວ', 'success');
+                    Swal.fire('ສຳເລັດ!', editId ? 'ອັບເດດຂໍ້ມູນກໍລະນີເສຍຊີວິດຮຽບຮ້ອຍແລ້ວ' : 'ບັນທຶກກໍລະນີເສຍຊີວິດຮຽບຮ້ອຍແລ້ວ', 'success');
                 } else {
                     alert('ບັນທຶກກໍລະນີເສຍຊີວິດສຳເລັດ');
                 }
@@ -1584,13 +1605,40 @@
                     <td><b>${money(d.total)}</b></td>
                     <td>
                         <div class="actions">
-                            <button class="mini" onclick="openTracking('${d.id}')">ກວດກາ</button>
+                            <button class="mini" onclick="editDeath('${d.id}')">ແກ້ໄຂ</button>
                             <button class="mini del" onclick="delItem('deaths','${d.id}')">ລົບ</button>
                         </div>
                     </td>
                 </tr>
             `).join('') || '<tr><td colspan="7" class="empty">ຍັງບໍ່ມີລາຍການ</td></tr>';
         }
+
+        function editDeath(id) {
+            let d = db.deaths.find(x => x.id === id);
+            if (!d) return;
+
+            // ດຶງຂໍ້ມູນມາໃສ່ຟອມ
+            document.getElementById('dId').value = d.id;
+            document.getElementById('dName').value = d.name || '';
+            
+            let mem = member(d.memberId);
+            document.getElementById('dMember').value = mem ? `${mem.id} - ${mem.name}` : d.memberId;
+            
+            document.getElementById('dRate').value = Number(d.rate).toLocaleString('en-US');
+            document.getElementById('dDate').value = d.date || today();
+            document.getElementById('dCount').value = d.count || db.members.length;
+            document.getElementById('dNote').value = d.note || '';
+
+            calcDeath(); // ຄຳນວນຍອດລວມໃໝ່
+            
+            // ປ່ຽນຂໍ້ຄວາມປຸ່ມເພື່ອໃຫ້ຮູ້ວ່າກຳລັງແກ້ໄຂ
+            let btn = document.getElementById('topSaveDeathBtn');
+            if(btn) btn.innerHTML = '<span style="font-size: 16px;">💾</span> ອັບເດດກໍລະນີ';
+
+            // ເລື່ອນໜ້າຈໍຂຶ້ນໄປຫາຟອມອັດຕະໂນມັດ
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         let currentTrackDeathId = null;
 
         function openTracking(deathId) {
@@ -2201,34 +2249,29 @@
 
         // --- ລະບົບ Login ຜູ້ດູແລ ---
         function checkAuth() {
-            // ກວດສອບໃຫ້ແນ່ໃຈວ່າຄ່າເປັນ 'true' ເທົ່ານັ້ນ ຈຶ່ງຈະເປັນ Admin
             let isAdmin = localStorage.getItem('isAdmin') === 'true';
             
             if (isAdmin) {
                 document.body.classList.remove('view-only');
                 document.getElementById('authAdmin').classList.remove('hidden');
                 document.getElementById('authGuest').classList.add('hidden');
-                
-                // ຖ້າເປັນ Admin ແລະ ຢູ່ໜ້າ members ໃຫ້ສະແດງເຄື່ອງມື
-                let topMemberActions = document.getElementById('topMemberActions');
-                if (topMemberActions && !document.getElementById('members').classList.contains('hidden')) {
-                    topMemberActions.classList.remove('hidden');
-                }
             } else {
                 document.body.classList.add('view-only');
                 document.getElementById('authAdmin').classList.add('hidden');
                 document.getElementById('authGuest').classList.remove('hidden');
                 
-                // ບັງຄັບເຊື່ອງເຄື່ອງມື Admin ທັນທີ ຖ້າບໍ່ມີສິດ
-                let topMemberActions = document.getElementById('topMemberActions');
-                if (topMemberActions) {
-                    topMemberActions.classList.add('hidden');
-                }
-                
                 // ຖ້າບໍ່ມີສິດ ແລ້ວຫຼົງເຂົ້າໄປໜ້າສຳຮອງຂໍ້ມູນ (Backup) ໃຫ້ດີດກັບມາໜ້າຫຼັກ
                 if (!document.getElementById('backup').classList.contains('hidden')) {
                     go('dashboard');
+                    return; // ຢຸດການເຮັດວຽກ ເພາະ go() ຈະຈັດການຕໍ່ເອງ
                 }
+            }
+
+            // ໂຫຼດໜ້າປັດຈຸບັນຄືນໃໝ່ ເພື່ອໃຫ້ປຸ່ມເຄື່ອງມືຕ່າງໆຂອງ Admin ສະແດງ/ເຊື່ອງ ທັນທີໂດຍບໍ່ຕ້ອງ Refresh Browser
+            let activeBtn = document.querySelector('.nav button.active');
+            if (activeBtn) {
+                let currentPage = activeBtn.dataset.page;
+                go(currentPage);
             }
         }
 
@@ -2256,9 +2299,8 @@
         }
 
         function logoutAdmin() {
-            // ລຶບຄ່າ isAdmin ອອກຈາກ localStorage ເລີຍ ເພື່ອຄວາມແນ່ນອນ
             localStorage.removeItem('isAdmin');
-            checkAuth();
+            checkAuth(); // ຟັງຊັນນີ້ຈະຈັດການເຊື່ອງເຄື່ອງມື Admin ທັນທີ
             
             Swal.fire({
                 title: 'ສຳເລັດ',
@@ -2266,9 +2308,6 @@
                 icon: 'info',
                 timer: 1500,
                 showConfirmButton: false
-            }).then(() => {
-                // ບັງຄັບ Refresh ໜ້າເວັບ ເພື່ອລ້າງ Cache ຂອງຕາຕະລາງ ແລະ ເຄື່ອງມືຕ່າງໆ
-                window.location.reload();
             });
         }
 
