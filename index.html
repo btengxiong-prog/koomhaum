@@ -1595,6 +1595,7 @@
         }
 
         function renderDeaths() {
+            let isAdmin = localStorage.getItem('isAdmin') === 'true'; // ກວດສອບສິດທິ Admin
             document.getElementById('deathRows').innerHTML = db.deaths.map(d => `
                 <tr>
                     <td>${esc(d.date ? d.date.split('-').reverse().join('/') : '')}</td>
@@ -1606,8 +1607,10 @@
                     <td>
                         <div class="actions">
                             <button class="mini" style="background:#0f9d8a; color:white;" onclick="viewDeathInfo('${d.id}')">📄 ລາຍລະອຽດ</button>
+                            ${isAdmin ? `
                             <button class="mini" onclick="editDeath('${d.id}')">ແກ້ໄຂ</button>
                             <button class="mini del" onclick="delItem('deaths','${d.id}')">ລົບ</button>
+                            ` : ''}
                         </div>
                     </td>
                 </tr>
