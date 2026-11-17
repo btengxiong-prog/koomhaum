@@ -758,8 +758,8 @@
                 <section id="deaths" class="page hidden">
                     <div class="panel">
                         <form id="deathForm">
-                            <input type="hidden" id="dId"> <!-- ເພີ່ມຊ່ອງເກັບ ID ສຳລັບການແກ້ໄຂ -->
-                            <div class="formgrid">
+                            <input type="hidden" id="dId">
+                            <div class="formgrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0 20px;">
                                 <div class="field">
                                     <label>ຊື່ຜູ້ເສຍຊີວິດ</label>
                                     <input required id="dName" placeholder="ປ້ອນຊື່">
@@ -769,12 +769,12 @@
                                     <input id="dMember" list="memberList" placeholder="ພິມຄົ້ນຫາຊື່ ຫຼື ລະຫັດສະມາຊິກ..." required autocomplete="off">
                                 </div>
                                 <div class="field">
-                                    <label>ອັດຕາເກັບເງິນ/ຄອບຄົວ (ກີບ)</label>
-                                    <input id="dRate" type="text" value="50,000" oninput="formatInput(this); calcDeath()" required>
-                                </div>
-                                <div class="field">
                                     <label>ວັນທີເກີດເຫດ</label>
                                     <input id="dDate" type="date" required>
+                                </div>
+                                <div class="field">
+                                    <label>ອັດຕາເກັບເງິນ/ຄອບຄົວ (ກີບ)</label>
+                                    <input id="dRate" type="text" value="50,000" oninput="formatInput(this); calcDeath()" required>
                                 </div>
                                 <div class="field">
                                     <label>ຈຳນວນຄອບຄົວທີ່ຕ້ອງຈ່າຍ</label>
@@ -782,11 +782,11 @@
                                 </div>
                                 <div class="field">
                                     <label>ຍອດເງິນທີ່ຄາດຄະເນ</label>
-                                    <input id="dTotal" readonly>
+                                    <input id="dTotal" readonly style="background: #f8fafc; font-weight: bold; color: var(--teal);">
                                 </div>
-                                <div class="field wide">
-                                    <label>ໝາຍເຫດ</label>
-                                    <textarea id="dNote" rows="2"></textarea>
+                                <div class="field wide" style="grid-column: 1 / -1; margin-top: 5px;">
+                                    <label>ໝາຍເຫດ (ປະຫວັດ/ແຈ້ງຂ່າວມໍລະນະກຳ)</label>
+                                    <textarea id="dNote" rows="4" placeholder="ພິມລາຍລະອຽດ ຫຼື ແຈ້ງຂ່າວທີ່ນີ້..."></textarea>
                                 </div>
                             </div>
                         </form>
