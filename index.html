@@ -658,8 +658,15 @@
 
                     <!-- ປຸ່ມລຶບລາຍການໜ້າຮັບເງິນ (ຈະສະແດງສະເພາະຕອນຢູ່ໜ້າຮັບເງິນ) -->
                     <button id="topDeletePaymentsBtn" type="button" class="hidden" onclick="delSelectedPayments()" style="font-family: inherit; background: #dc4b55; color: white; border: none; border-radius: 8px; padding: 9px 15px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 3px 6px rgba(220,75,85,0.2); transition: 0.2s;">
-                        🗑️ ລຶບຂໍ້ມູນ
+                        🗑️ ລຶບລາຍການທີ່ເລືອກ
                     </button>
+
+                    <!-- ປ່ອງເລືອກຜູ້ເສຍຊີວິດໜ້າລາຍງານ -->
+                    <div id="topReportFilter" class="hidden" style="display: flex; align-items:center; gap: 10px;">
+                        <select id="reportDeathSelect" onchange="renderReports()" style="padding: 10px; border-radius: 8px; border: 1px solid var(--line); outline: none; background: #fff; font-family: inherit; cursor: pointer; font-size: 13.5px; font-weight: 600; color: #1e293b; min-width: 180px;">
+                            <option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ (ລວມທັງໝົດ) --</option>
+                        </select>
+                    </div>
 
                     <!-- ກຸ່ມປຸ່ມເຂົ້າສູ່ລະບົບ / ອອກຈາກລະບົບ -->
                     <div id="authGuest" style="display: flex; gap: 10px;">
@@ -884,13 +891,6 @@
 
                 <!-- Reports Page -->
                 <section id="reports" class="page hidden">
-                    <div class="pagehead">
-                        <div>
-                            <h1>ລາຍງານກອງທຶນ</h1>
-                            <p>ສະຫຼຸບລາຍຮັບ, ລາຍຈ່າຍ ແລະ ຍອດເຫຼືອ</p>
-                        </div>
-                        <button class="btn" onclick="exportAll()">ສົ່ງອອກລາຍງານ CSV</button>
-                    </div>
                     <div class="stats">
                         <div class="stat">
                             <div class="label">ຮັບຈາກສະມາຊິກ</div>
@@ -1232,6 +1232,15 @@
                     topPaymentSummaryFilters.classList.remove('hidden');
                 } else {
                     topPaymentSummaryFilters.classList.add('hidden');
+                }
+            }
+
+            let topReportFilter = document.getElementById('topReportFilter');
+            if (topReportFilter) {
+                if (page === 'reports') {
+                    topReportFilter.classList.remove('hidden');
+                } else {
+                    topReportFilter.classList.add('hidden');
                 }
             }
             
@@ -2202,22 +2211,62 @@
         }
 
         function renderReports() {
+            let specificDeathId = document.getElementById('reportDeathSelect')?.value || '';
             let t = totals();
             
-            document.getElementById('rPayments').textContent = money(t.paid);
-            document.getElementById('rOther').textContent = money(t.inc);
-            document.getElementById('rExpenses').textContent = money(t.out);
-            document.getElementById('rBalance').textContent = money(t.balance);
-            
-            let paymentsConfirmed = db.payments.filter(p => p.status === 'confirmed').length;
-            let paymentsPending = db.payments.filter(p => p.status === 'pending').length;
+            let rPayments = 0;
+            let rOther = 0;
+            let rExpenses = 0;
+            let rBalance = 0;
+            let paymentsConfirmed = 0;
+            let paymentsPending = 0;
 
-            document.getElementById('reportSummary').innerHTML = `
-                <p>ຈຳນວນສະມາຊິກ: <b>${db.members.length}</b> ຄອບຄົວ</p>
-                <p>ຈຳນວນກໍລະນີເສຍຊີວິດ: <b>${db.deaths.length}</b> ກໍລະນີ</p>
-                <p>ຈຳນວນລາຍການຮັບເງິນ: <b>${paymentsConfirmed}</b></p>
-                <p>ລາຍການລໍຖ້າກວດສອບ: <b>${paymentsPending}</b></p>
-            `;
+            if (specificDeathId) {
+                // ຖ້າມີການເລືອກສົບ: ຄຳນວນສະເພາະສົບນັ້ນ
+                let specificPayments = db.payments.filter(p => p.deathId === specificDeathId);
+                paymentsConfirmed = specificPayments.filter(p => p.status === 'confirmed').length;
+                paymentsPending = specificPayments.filter(p => p.status === 'pending').length;
+                
+                rPayments = specificPayments.filter(p => p.status === 'confirmed').reduce((s, p) => s + p.amount, 0);
+                rOther = 0; 
+                
+                let specificDeath = db.deaths.find(d => d.id === specificDeathId);
+                if (specificDeath && specificDeath.payouts) {
+                    rExpenses = specificDeath.payouts.reduce((s, po) => s + po.amount, 0);
+                } else if (specificDeath && specificDeath.handedOver) {
+                    rExpenses = rPayments > 0 ? rPayments : (specificDeath.total || (specificDeath.rate * specificDeath.count));
+                }
+
+                rBalance = rPayments + rOther - rExpenses;
+
+                document.getElementById('reportSummary').innerHTML = `
+                    <p>ສະຫຼຸບລາຍງານສະເພາະກໍລະນີ: <b>${esc(specificDeath ? specificDeath.name : '')}</b></p>
+                    <p>ຈຳນວນລາຍການຮັບເງິນ: <b>${paymentsConfirmed}</b> / ${db.members.length} ຄອບຄົວ</p>
+                    <p>ລາຍການລໍຖ້າກວດສອບ: <b>${paymentsPending}</b></p>
+                `;
+            } else {
+                // ຖ້າບໍ່ເລືອກ: ສະແດງຍອດລວມທັງໝົດຄືເກົ່າ
+                rPayments = t.paid;
+                rOther = t.inc;
+                rExpenses = t.out;
+                rBalance = t.balance;
+
+                paymentsConfirmed = db.payments.filter(p => p.status === 'confirmed').length;
+                paymentsPending = db.payments.filter(p => p.status === 'pending').length;
+
+                document.getElementById('reportSummary').innerHTML = `
+                    <p>ຈຳນວນສະມາຊິກ: <b>${db.members.length}</b> ຄອບຄົວ</p>
+                    <p>ຈຳນວນກໍລະນີເສຍຊີວິດ: <b>${db.deaths.length}</b> ກໍລະນີ</p>
+                    <p>ຈຳນວນລາຍການຮັບເງິນທັງໝົດ: <b>${paymentsConfirmed}</b></p>
+                    <p>ລາຍການລໍຖ້າກວດສອບ: <b>${paymentsPending}</b></p>
+                `;
+            }
+
+            // ອັບເດດຕົວເລກຂຶ້ນໜ້າຈໍ
+            document.getElementById('rPayments').textContent = money(rPayments);
+            document.getElementById('rOther').textContent = money(rOther);
+            document.getElementById('rExpenses').textContent = money(rExpenses);
+            document.getElementById('rBalance').textContent = money(rBalance);
         }
 
         function renderAll() {
@@ -2240,6 +2289,16 @@
                     `<option value="${d.id}">${esc(d.date ? d.date.split('-').reverse().join('/') : '')} - ${esc(d.name)}</option>`
                 ).join('');
                 pDeathEl.value = pde;
+            }
+
+            // ໂຫຼດລາຍຊື່ຜູ້ເສຍຊີວິດລົງໃນໜ້າລາຍງານ
+            let rDeathEl = document.getElementById('reportDeathSelect');
+            if(rDeathEl) {
+                let rde = rDeathEl.value;
+                rDeathEl.innerHTML = '<option value="">-- ເລືອກຊື່ຜູ້ເສຍຊີວິດ (ລວມທັງໝົດ) --</option>' + (db.deaths || []).map(d => 
+                    `<option value="${d.id}">${esc(d.date ? d.date.split('-').reverse().join('/') : '')} - ${esc(d.name)}</option>`
+                ).join('');
+                rDeathEl.value = rde;
             }
             
             renderMembers();
