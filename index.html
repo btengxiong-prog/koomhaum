@@ -1328,8 +1328,10 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     db.members = db.members.filter(m => !checked.includes(m.id));
+                    // ລຶບປະຫວັດການຈ່າຍເງິນຂອງສະມາຊິກທີ່ຖືກລຶບອອກນຳ
+                    db.payments = db.payments.filter(p => !checked.includes(p.memberId));
                     save();
-                    Swal.fire('ລຶບສຳເລັດ!', 'ຂໍ້ມູນສະມາຊິກຖືກລຶບແລ້ວ.', 'success');
+                    Swal.fire('ລຶບສຳເລັດ!', 'ຂໍ້ມູນສະມາຊິກ ແລະ ປະຫວັດການຈ່າຍເງິນຂອງພວກເຂົາຖືກລຶບແລ້ວ.', 'success');
                 }
             });
         }
@@ -2171,8 +2173,14 @@
         }
 
         function delItem(type, id) {
-            if (confirm('ຢືນຢັນລົບລາຍການນີ້?')) {
+            if (confirm('ຢືນຢັນລົບລາຍການນີ້? ຖ້າມີຂໍ້ມູນອື່ນທີ່ກ່ຽວຂ້ອງ ມັນອາດຈະຖືກລຶບໄປພ້ອມ.')) {
                 db[type] = db[type].filter(x => x.id !== id);
+                
+                // ຖ້າລຶບກໍລະນີເສຍຊີວິດ ໃຫ້ລຶບປະຫວັດການຮັບເງິນຂອງສົບນັ້ນອອກນຳ
+                if (type === 'deaths') {
+                    db.payments = db.payments.filter(p => p.deathId !== id);
+                }
+                
                 save();
             }
         }
