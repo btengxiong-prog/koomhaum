@@ -655,7 +655,7 @@
 
                     <!-- ປຸ່ມລຶບລາຍການໜ້າຮັບເງິນ (ຈະສະແດງສະເພາະຕອນຢູ່ໜ້າຮັບເງິນ) -->
                     <button id="topDeletePaymentsBtn" type="button" class="hidden" onclick="delSelectedPayments()" style="font-family: inherit; background: #dc4b55; color: white; border: none; border-radius: 8px; padding: 9px 15px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 3px 6px rgba(220,75,85,0.2); transition: 0.2s;">
-                        🗑️ ລຶບລາຍການທີ່ເລືອກ
+                        🗑️ ລຶບຂໍ້ມູນ
                     </button>
 
                     <!-- ກຸ່ມປຸ່ມເຂົ້າສູ່ລະບົບ / ອອກຈາກລະບົບ -->
@@ -824,6 +824,9 @@
                                         <th style="text-align: center;">ຈຳນວນສົບທີ່ຈ່າຍ</th>
                                         <th style="text-align: right;">ຍອດເງິນລວມທີ່ຖອກ (ກີບ)</th>
                                         <th style="text-align: center;">ສະຖານະ</th>
+                                        <th style="text-align:center;" class="admin-only">
+                                            <input type="checkbox" id="checkAllPayments" onclick="toggleAllPayments(this)" style="width:16px;height:16px;cursor:pointer;" title="ຕິກທັງໝົດ">
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="paymentRows"></tbody>
@@ -1752,6 +1755,8 @@
             }
 
             let grandTotal = 0;
+            let isAdmin = localStorage.getItem('isAdmin') === 'true'; // ກວດສອບສິດ Admin
+            
             let html = filtered.map((item, index) => {
                 grandTotal += item.totalPaidAmount;
                 let statusTag = totalDeathsCount === 0 ? 
@@ -1760,6 +1765,20 @@
                         `<span class="tag">🟢 ຈ່າຍຄົບ (${item.paidCount}/${totalDeathsCount})</span>` : 
                         `<span class="tag bad">🔴 ຍັງຂາດ (${item.paidCount}/${totalDeathsCount})</span>`
                     );
+
+                // ຊອກຫາ ID ຂອງລາຍການຈ່າຍເງິນ (ສຳລັບໃຊ້ລຶບ), ສົມມຸດວ່າຈະລຶບລາຍການຈ່າຍເງິນຂອງສະມາຊິກນີ້ໃນກໍລະນີທີ່ເລືອກ
+                // ຖ້າບໍ່ໄດ້ເລືອກກໍລະນີເສຍຊີວິດສະເພາະ (specificDeathId) ອາດຈະບໍ່ມີ id ທີ່ຊັດເຈນໃຫ້ລຶບ,
+                // ແຕ່ຖ້າເລືອກແລ້ວ ສາມາດດຶງ payment.id ມາໃຊ້ເປັນ value ຂອງ checkbox ໄດ້
+                let paymentIdForCheckbox = '';
+                if (specificDeathId) {
+                     let p = db.payments.find(p => p.memberId === item.member.id && p.deathId === specificDeathId);
+                     if (p) paymentIdForCheckbox = p.id;
+                }
+                
+                // ຖ້າບໍ່ມີ paymentIdForCheckbox (ຍັງບໍ່ຈ່າຍ) ໃຫ້ disable checkbox ໄວ້
+                let checkboxHtml = paymentIdForCheckbox ? 
+                    `<input type="checkbox" class="chk-payment" value="${paymentIdForCheckbox}" style="width:16px;height:16px;cursor:pointer;">` :
+                    `<input type="checkbox" disabled style="width:16px;height:16px;cursor:not-allowed;" title="ບໍ່ມີລາຍການໃຫ້ລຶບ">`;
 
                 return `
                     <tr>
@@ -1771,13 +1790,26 @@
                         <td style="text-align: center;">${item.paidCount} / ${totalDeathsCount}</td>
                         <td style="text-align: right; color: var(--teal); font-weight: bold;">${money(item.totalPaidAmount)}</td>
                         <td style="text-align: center;">${statusTag}</td>
+                        <td style="text-align:center;" class="admin-only ${isAdmin ? '' : 'hidden'}">
+                            ${isAdmin ? checkboxHtml : ''}
+                        </td>
                     </tr>
                 `;
-            }).join('') || '<tr><td colspan="8" class="empty">ບໍ່ພົບຂໍ້ມູນສະມາຊິກ</td></tr>';
+            }).join('') || `<tr><td colspan="${isAdmin ? 9 : 8}" class="empty">ບໍ່ພົບຂໍ້ມູນສະມາຊິກ</td></tr>`;
 
             document.getElementById('paymentRows').innerHTML = html;
+            
+            let checkAllBtn = document.getElementById('checkAllPayments');
+            if(checkAllBtn) checkAllBtn.checked = false; // Reset ປຸ່ມຕິກທັງໝົດ
+
             let totalEl = document.getElementById('totalPaymentSummaryAmount');
             if (totalEl) totalEl.textContent = money(grandTotal);
+            
+            // ຈັດການສະແດງຜົນຄໍລຳ Checkbox ໃນຫົວຕາຕະລາງ (thead)
+            let thAdminOnly = document.querySelector('#payments thead .admin-only');
+            if (thAdminOnly) {
+                thAdminOnly.style.display = isAdmin ? '' : 'none';
+            }
         }
 
         function verify(id) {
